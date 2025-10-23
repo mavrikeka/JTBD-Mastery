@@ -118,7 +118,7 @@ export default function CritiqueMode() {
 
               <div className="flex gap-3">
                 <Button
-                  variant="primary"
+                  variant="default"
                   size="lg"
                   onClick={handleAnalyze}
                   disabled={critiqueMutation.isPending || !jtbdInput.trim()}
@@ -187,7 +187,7 @@ export default function CritiqueMode() {
                 />
               </div>
 
-              {critique.suggestions.length > 0 && (
+              {critique.suggestions && critique.suggestions.length > 0 && (
                 <Card className="p-8 bg-primary/5 border-primary/20">
                   <h3 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2">
                     <AlertCircle className="w-6 h-6 text-primary" />
@@ -228,7 +228,7 @@ export default function CritiqueMode() {
                   Return to Menu
                 </Button>
                 <Button
-                  variant="primary"
+                  variant="default"
                   size="lg"
                   onClick={handleReset}
                   data-testid="button-analyze-another"
