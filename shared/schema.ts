@@ -73,6 +73,7 @@ export const builtJtbdSchema = z.object({
   assembled: z.string(),
   score: z.number().optional(),
   feedback: z.string().optional(),
+  timestamp: z.string().optional(),
 });
 
 export type BuiltJTBD = z.infer<typeof builtJtbdSchema>;

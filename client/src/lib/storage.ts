@@ -42,7 +42,7 @@ export function updateLearnProgress(examplesViewed: number, quizScore?: number):
 export function updateBuildProgress(jtbd: BuiltJTBD): void {
   const progress = getProgress();
   progress.buildMode.jtbdsCreated += 1;
-  progress.buildMode.completed = true;
+  progress.buildMode.completed = progress.buildMode.jtbdsCreated >= 3;
   
   if (jtbd.score && (!progress.buildMode.bestScore || jtbd.score > progress.buildMode.bestScore)) {
     progress.buildMode.bestScore = jtbd.score;
@@ -50,22 +50,40 @@ export function updateBuildProgress(jtbd: BuiltJTBD): void {
   
   saveProgress(progress);
   
-  // Save the built JTBD
+  // Save the built JTBD with timestamp
   try {
     const saved = localStorage.getItem(BUILT_JTBDS_KEY);
     const jtbds: BuiltJTBD[] = saved ? JSON.parse(saved) : [];
-    jtbds.push({ ...jtbd, assembled: jtbd.assembled });
+    jtbds.push({ 
+      ...jtbd, 
+      assembled: jtbd.assembled,
+      timestamp: new Date().toISOString()
+    });
     localStorage.setItem(BUILT_JTBDS_KEY, JSON.stringify(jtbds));
   } catch (e) {
     console.error('Failed to save built JTBD:', e);
   }
 }
 
-export function updateCritiqueProgress(): void {
+export function updateCritiqueProgress(jtbdStatement: string, critique: any): void {
   const progress = getProgress();
   progress.critiqueMode.jtbdsCritiqued += 1;
-  progress.critiqueMode.completed = true;
+  progress.critiqueMode.completed = progress.critiqueMode.jtbdsCritiqued >= 5;
   saveProgress(progress);
+  
+  // Save the critique with timestamp
+  try {
+    const saved = localStorage.getItem(CRITIQUES_KEY);
+    const critiques: Array<{statement: string, critique: any, timestamp: string}> = saved ? JSON.parse(saved) : [];
+    critiques.push({ 
+      statement: jtbdStatement, 
+      critique,
+      timestamp: new Date().toISOString()
+    });
+    localStorage.setItem(CRITIQUES_KEY, JSON.stringify(critiques));
+  } catch (e) {
+    console.error('Failed to save critique:', e);
+  }
 }
 
 export function getBuiltJTBDs(): BuiltJTBD[] {
@@ -74,6 +92,16 @@ export function getBuiltJTBDs(): BuiltJTBD[] {
     return saved ? JSON.parse(saved) : [];
   } catch (e) {
     console.error('Failed to load built JTBDs:', e);
+    return [];
+  }
+}
+
+export function getCritiques(): Array<{statement: string, critique: any, timestamp: string}> {
+  try {
+    const saved = localStorage.getItem(CRITIQUES_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch (e) {
+    console.error('Failed to load critiques:', e);
     return [];
   }
 }

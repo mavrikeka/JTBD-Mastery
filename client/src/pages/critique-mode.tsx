@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -17,12 +17,7 @@ export default function CritiqueMode() {
   const { toast } = useToast();
   const [jtbdInput, setJtbdInput] = useState("");
   const [critique, setCritique] = useState<CritiqueResponse | null>(null);
-
-  useEffect(() => {
-    if (critique) {
-      updateCritiqueProgress();
-    }
-  }, [critique]);
+  const analyzedStatementRef = useRef<string>("");
 
   const critiqueMutation = useMutation({
     mutationFn: async (request: CritiqueRequest) => {
@@ -37,12 +32,16 @@ export default function CritiqueMode() {
       console.log('Overall score:', data.overallScore);
       console.log('Component scores:', data.whatScore, data.howMuchScore, data.whenScore);
       setCritique(data);
+      if (analyzedStatementRef.current) {
+        updateCritiqueProgress(analyzedStatementRef.current, data);
+      }
       toast({
         title: "Analysis complete",
         description: `Overall score: ${data.overallScore}/100`,
       });
     },
     onError: (error: any) => {
+      analyzedStatementRef.current = "";
       toast({
         title: "Analysis failed",
         description: error.message || "Please try again",
@@ -62,12 +61,14 @@ export default function CritiqueMode() {
     }
     console.log('🔥 Starting critique request...');
     console.log('JTBD input:', jtbdInput);
+    analyzedStatementRef.current = jtbdInput;
     critiqueMutation.mutate({ jtbdStatement: jtbdInput });
   };
 
   const handleReset = () => {
     setJtbdInput("");
     setCritique(null);
+    analyzedStatementRef.current = "";
   };
 
   return (

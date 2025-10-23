@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Lightbulb, Hammer, Search } from "lucide-react";
+import { Lightbulb, Hammer, Search, History, Clock } from "lucide-react";
 import { ModeCard } from "@/components/mode-card";
-import { UserProgress } from "@shared/schema";
-import { getProgress } from "@/lib/storage";
+import { Card } from "@/components/ui/card";
+import { UserProgress, BuiltJTBD } from "@shared/schema";
+import { getProgress, getBuiltJTBDs, getCritiques } from "@/lib/storage";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -13,9 +14,13 @@ export default function Home() {
     buildMode: { completed: false, jtbdsCreated: 0 },
     critiqueMode: { completed: false, jtbdsCritiqued: 0 },
   });
+  const [builtJTBDs, setBuiltJTBDs] = useState<BuiltJTBD[]>([]);
+  const [critiques, setCritiques] = useState<Array<{statement: string, critique: any, timestamp: string}>>([]);
 
   useEffect(() => {
     setProgress(getProgress());
+    setBuiltJTBDs(getBuiltJTBDs().slice(-3).reverse()); // Last 3, most recent first
+    setCritiques(getCritiques().slice(-3).reverse()); // Last 3, most recent first
   }, []);
 
   return (
@@ -92,6 +97,67 @@ export default function Home() {
             />
           </motion.div>
         </div>
+
+        {(builtJTBDs.length > 0 || critiques.length > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-12"
+          >
+            <div className="flex items-center gap-2 mb-6">
+              <History className="w-6 h-6 text-primary" />
+              <h2 className="text-2xl font-bold text-foreground">Your Recent Work</h2>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {builtJTBDs.length > 0 && (
+                <Card className="p-6 bg-card/50 border-card-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Hammer className="w-5 h-5 text-primary" />
+                    <h3 className="text-lg font-semibold text-foreground">Built JTBDs</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {builtJTBDs.map((jtbd, index) => (
+                      <div key={index} className="p-3 rounded-lg bg-background border border-border hover-elevate cursor-pointer" onClick={() => setLocation('/critique')}>
+                        <p className="text-sm text-foreground line-clamp-2">{jtbd.assembled}</p>
+                        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          <span>{jtbd.timestamp ? new Date(jtbd.timestamp).toLocaleDateString() : jtbd.scenarioId}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+              {critiques.length > 0 && (
+                <Card className="p-6 bg-card/50 border-card-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Search className="w-5 h-5 text-primary" />
+                    <h3 className="text-lg font-semibold text-foreground">Critiqued JTBDs</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {critiques.map((item, index) => (
+                      <div key={index} className="p-3 rounded-lg bg-background border border-border hover-elevate cursor-pointer" onClick={() => setLocation('/critique')}>
+                        <p className="text-sm text-foreground line-clamp-2">{item.statement}</p>
+                        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                          <span className="font-semibold text-primary">Score: {item.critique.overallScore}/100</span>
+                          {item.timestamp && (
+                            <>
+                              <Clock className="w-3 h-3 ml-auto" />
+                              <span>{new Date(item.timestamp).toLocaleDateString()}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0 }}
