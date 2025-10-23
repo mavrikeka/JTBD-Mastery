@@ -440,6 +440,28 @@ export default function BuildMode() {
   }
 
   if (stage === 'review') {
+    const handleGetFeedback = () => {
+      if (!assembledJTBD || !assembledJTBD.trim()) {
+        toast({
+          title: "Incomplete JTBD",
+          description: "Please complete all sections before getting feedback",
+          variant: "destructive",
+        });
+        return;
+      }
+      try {
+        localStorage.setItem('critique-prefill', assembledJTBD);
+        setLocation('/critique');
+      } catch (e) {
+        console.error('Failed to save JTBD for critique:', e);
+        toast({
+          title: "Navigation failed",
+          description: "Please try again",
+          variant: "destructive",
+        });
+      }
+    };
+
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <header className="p-4 border-b border-border">
@@ -453,38 +475,44 @@ export default function BuildMode() {
         <div className="flex-1 overflow-auto p-6">
           <div className="max-w-3xl mx-auto space-y-8">
             <div className="text-center">
-              <h2 className="text-3xl font-bold mb-2 text-foreground">Your JTBD</h2>
-              <p className="text-muted-foreground">Review your work below</p>
+              <h2 className="text-3xl font-bold mb-2 text-foreground">Your Completed JTBD</h2>
+              <p className="text-muted-foreground">Here's your assembled statement - ready for AI feedback!</p>
             </div>
             
-            <Card className="p-8 bg-gradient-to-br from-primary/5 to-chart-3/5 border-primary/20">
-              <p className="text-xl font-medium text-foreground leading-relaxed">{assembledJTBD}</p>
-            </Card>
+            <div className="space-y-4">
+              <p className="text-sm font-semibold text-primary text-center">✨ FULL STATEMENT:</p>
+              <Card className="p-8 bg-gradient-to-br from-primary/10 to-chart-3/10 border-2 border-primary/30">
+                <p className="text-xl font-semibold text-foreground leading-relaxed text-center">{assembledJTBD}</p>
+              </Card>
+            </div>
             
-            <div className="grid md:grid-cols-3 gap-4">
-              <Card className="p-6 bg-card/50">
-                <p className="text-sm font-semibold text-primary mb-2">WHAT</p>
-                <p className="text-foreground text-sm">{buildData.what}</p>
-              </Card>
-              <Card className="p-6 bg-card/50">
-                <p className="text-sm font-semibold text-primary mb-2">HOW MUCH</p>
-                <div className="space-y-1">
-                  {buildData.metrics.map((m, i) => (
-                    <p key={i} className="text-foreground text-sm">{m.name}: {m.current} → {m.target}</p>
-                  ))}
-                </div>
-              </Card>
-              <Card className="p-6 bg-card/50">
-                <p className="text-sm font-semibold text-primary mb-2">WHEN</p>
-                <p className="text-foreground text-sm">{buildData.when}</p>
-              </Card>
+            <div className="space-y-4">
+              <p className="text-sm font-semibold text-muted-foreground text-center">Component Breakdown:</p>
+              <div className="grid md:grid-cols-3 gap-4">
+                <Card className="p-6 bg-card/50">
+                  <p className="text-sm font-semibold text-primary mb-2">WHAT</p>
+                  <p className="text-foreground text-sm">{buildData.what}</p>
+                </Card>
+                <Card className="p-6 bg-card/50">
+                  <p className="text-sm font-semibold text-primary mb-2">HOW MUCH</p>
+                  <div className="space-y-1">
+                    {buildData.metrics.map((m, i) => (
+                      <p key={i} className="text-foreground text-sm">{m.name}: {m.current} → {m.target}</p>
+                    ))}
+                  </div>
+                </Card>
+                <Card className="p-6 bg-card/50">
+                  <p className="text-sm font-semibold text-primary mb-2">WHEN</p>
+                  <p className="text-foreground text-sm">{buildData.when}</p>
+                </Card>
+              </div>
             </div>
             
             <div className="flex gap-4 justify-center flex-wrap">
               <Button variant="outline" size="lg" onClick={() => setLocation('/')} data-testid="button-return-menu">
                 Save & Exit
               </Button>
-              <Button variant="primary" size="lg" onClick={() => setLocation('/critique')} data-testid="button-get-feedback">
+              <Button variant="primary" size="lg" onClick={handleGetFeedback} data-testid="button-get-feedback">
                 Get AI Feedback →
               </Button>
             </div>

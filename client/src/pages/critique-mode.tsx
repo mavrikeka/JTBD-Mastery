@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -18,6 +18,14 @@ export default function CritiqueMode() {
   const [jtbdInput, setJtbdInput] = useState("");
   const [critique, setCritique] = useState<CritiqueResponse | null>(null);
   const analyzedStatementRef = useRef<string>("");
+
+  useEffect(() => {
+    const prefilled = localStorage.getItem('critique-prefill');
+    if (prefilled) {
+      setJtbdInput(prefilled);
+      localStorage.removeItem('critique-prefill');
+    }
+  }, []);
 
   const critiqueMutation = useMutation({
     mutationFn: async (request: CritiqueRequest) => {
