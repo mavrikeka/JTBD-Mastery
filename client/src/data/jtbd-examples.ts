@@ -11,13 +11,13 @@ export const jtbdExamples: JTBDExample[] = [
       priority: "Operational excellence",
     },
     badJtbd: {
-      statement: "Improve manufacturing quality and reduce defects",
+      statement: "Implement lean manufacturing and Six Sigma to improve quality and reduce defects by next year",
       whyBad: [
-        "Too vague - 'improve' is not specific work",
-        "No metrics - no baseline, no target",
-        "No deadline",
-        "Googleable - applies to any manufacturing role",
-        "Doesn't specify HOW the work will be done",
+        "Missing metrics - no baseline or target numbers",
+        "'Improve quality' - by how much?",
+        "'Next year' is vague - which quarter? month?",
+        "No financial impact quantified",
+        "Has WHAT and WHEN, but missing HOW MUCH",
       ],
     },
     goodJtbd: {
@@ -41,13 +41,13 @@ export const jtbdExamples: JTBDExample[] = [
       priority: "Modernize and reduce costs",
     },
     badJtbd: {
-      statement: "Lead digital transformation and cloud adoption strategy",
+      statement: "Migrate legacy applications to cloud infrastructure, reducing IT costs from $45M to $31.5M",
       whyBad: [
-        "'Lead' is not specific work",
-        "'Digital transformation' is buzzword, not bespoke",
-        "No scale specified (how many apps?)",
-        "No metrics (cost reduction? uptime?)",
-        "No constraints mentioned (zero downtime?)",
+        "Missing timeline - when will this be complete?",
+        "No scale - how many applications?",
+        "Missing quality constraints (downtime tolerance?)",
+        "No availability/performance targets",
+        "Has WHAT and HOW MUCH, but missing WHEN",
       ],
     },
     goodJtbd: {
@@ -71,13 +71,13 @@ export const jtbdExamples: JTBDExample[] = [
       priority: "Accelerate growth",
     },
     badJtbd: {
-      statement: "Drive revenue growth and expand market share",
+      statement: "Build enterprise sales team and grow ARR from $8M to $45M by establishing Fortune 500 playbook",
       whyBad: [
-        "'Drive' is vague - what's the actual work?",
-        "No specific revenue targets",
-        "'Expand market share' - by how much?",
-        "Doesn't specify WHICH markets or segments",
-        "Generic - applies to any sales leader",
+        "Missing timeline completely",
+        "Doesn't specify team size (how many AEs?)",
+        "No retention/quality metrics (NRR, churn)",
+        "What is 'establishing a playbook'? Too vague",
+        "Has good metrics but missing WHEN and specific WHAT",
       ],
     },
     goodJtbd: {
@@ -101,13 +101,13 @@ export const jtbdExamples: JTBDExample[] = [
       priority: "Private equity owner demanding improvement",
     },
     badJtbd: {
-      statement: "Optimize costs and improve profitability across the organization",
+      statement: "Redesign supply chain operations to improve EBITDA margin from 8.2% to 11.5% in the next couple years",
       whyBad: [
-        "'Optimize' is consultant-speak, not real work",
-        "'Across organization' is too broad",
-        "No baseline or target metrics",
-        "Doesn't specify WHERE costs will be cut",
-        "Could apply to any CFO role",
+        "'Next couple years' is too vague - Q2 2027? 2028?",
+        "Missing specific cost reduction amount ($180M)",
+        "Doesn't specify HOW (renegotiate contracts? which vendors?)",
+        "No quality safeguards mentioned",
+        "Timeline is weak and unstrategic",
       ],
     },
     goodJtbd: {
@@ -131,13 +131,13 @@ export const jtbdExamples: JTBDExample[] = [
       priority: "Bold reinvention",
     },
     badJtbd: {
-      statement: "Revitalize brand and increase market share among younger demographics",
+      statement: "Execute brand repositioning for millennials through new visual identity and influencer partnerships, recapturing market share from 12% to 16% by Q3 2026",
       whyBad: [
-        "'Revitalize' is vague aspirational language",
-        "'Younger demographics' - how young? What segment?",
-        "No brand metrics (awareness, consideration, NPS)",
-        "No specific market share target",
-        "Doesn't describe the actual work",
+        "Missing brand health metrics (consideration, NPS, awareness)",
+        "'Millennials' needs age range (25-40)",
+        "No mention of DTC channel launch",
+        "Lacks specific brand consideration targets",
+        "Has most components but missing key HOW MUCH metrics",
       ],
     },
     goodJtbd: {
@@ -161,13 +161,13 @@ export const jtbdExamples: JTBDExample[] = [
       priority: "Reduce costs, improve retention",
     },
     badJtbd: {
-      statement: "Build world-class talent organization and improve employee experience",
+      statement: "Implement competitive comp framework and engineering career ladder to reduce attrition from 28% to 12% and improve Glassdoor rating",
       whyBad: [
-        "'World-class' is meaningless without metrics",
-        "'Build organization' - what specifically?",
-        "'Improve experience' - measured how?",
-        "No retention or cost targets",
-        "Generic HR platitudes",
+        "Missing timeline - when will this be done?",
+        "No Glassdoor target (from 3.2 to what?)",
+        "Missing cost-per-hire metrics",
+        "Doesn't mention manager training program",
+        "Has WHAT and partial HOW MUCH, but weak WHEN and incomplete metrics",
       ],
     },
     goodJtbd: {
@@ -191,13 +191,13 @@ export const jtbdExamples: JTBDExample[] = [
       priority: "Technical debt and UX improvements",
     },
     badJtbd: {
-      statement: "Modernize product platform and enhance user experience",
+      statement: "Re-architect platform from monolith to microservices and rebuild UI, reducing churn from 18% to 8% soon",
       whyBad: [
-        "'Modernize' and 'enhance' are vague",
-        "No technical specifics (architecture? API?)",
-        "No user metrics (NPS, satisfaction, speed)",
-        "No business impact (churn, retention)",
-        "Timeline missing",
+        "'Soon' is not a strategic deadline",
+        "Missing performance metrics (page load time)",
+        "No NPS or satisfaction targets",
+        "Doesn't mention API-first platform",
+        "Has WHAT and partial HOW MUCH, but terrible WHEN",
       ],
     },
     goodJtbd: {
@@ -221,13 +221,13 @@ export const jtbdExamples: JTBDExample[] = [
       priority: "ESG compliance and investor demands",
     },
     badJtbd: {
-      statement: "Develop and implement sustainability initiatives to reduce environmental impact",
+      statement: "Transition supplier base to renewable energy and implement circular packaging, reducing carbon emissions by 40% by sometime in 2026",
       whyBad: [
-        "'Develop initiatives' is process, not outcome",
-        "'Reduce impact' - by how much?",
-        "No specific programs or investments",
-        "No compliance deadlines",
-        "Doesn't specify WHAT will change",
+        "'Sometime in 2026' is vague - which quarter?",
+        "No baseline or target in absolute numbers (450K→270K tons)",
+        "Missing scope: how many suppliers? which SKUs?",
+        "No CDP rating target",
+        "Weak timeline and incomplete metrics",
       ],
     },
     goodJtbd: {
@@ -251,13 +251,13 @@ export const jtbdExamples: JTBDExample[] = [
       priority: "Increase customer lifetime value",
     },
     badJtbd: {
-      statement: "Improve customer success and drive retention",
+      statement: "Build customer success organization with health scoring and automated playbooks, increasing retention and growing customer LTV",
       whyBad: [
-        "'Improve' and 'drive' are not work",
-        "No retention target specified",
-        "Doesn't address expansion opportunity",
-        "No programs or capabilities mentioned",
-        "Generic customer success language",
+        "No timeline - when will this be complete?",
+        "'Increasing retention' - from/to what %?",
+        "'Growing LTV' - from/to what amount?",
+        "Missing expansion revenue metrics",
+        "Good WHAT, but completely missing specific HOW MUCH and WHEN",
       ],
     },
     goodJtbd: {
@@ -281,13 +281,13 @@ export const jtbdExamples: JTBDExample[] = [
       priority: "Strengthen product pipeline",
     },
     badJtbd: {
-      statement: "Accelerate innovation and strengthen product pipeline",
+      statement: "Restructure R&D portfolio focusing on oncology, establish research partnerships, and advance molecules into Phase 2 trials by end of 2027",
       whyBad: [
-        "'Accelerate' and 'strengthen' are vague",
-        "No specific number of drugs/trials",
-        "No success rate targets",
-        "No investment or process changes specified",
-        "Timeline unclear",
+        "How many molecules? (should specify 12)",
+        "Missing clinical success rate improvement (23%→38%)",
+        "How many partnerships? (should specify 4)",
+        "'End of 2027' less precise than 'Q4 2027'",
+        "Missing AI-driven drug discovery platform",
       ],
     },
     goodJtbd: {
