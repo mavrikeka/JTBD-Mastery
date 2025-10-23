@@ -40,8 +40,9 @@ export default function BuildMode() {
 
   const suggestionsMutation = useMutation({
     mutationFn: async (request: SuggestionRequest) => {
-      const response = await apiRequest<SuggestionResponse>('POST', '/api/suggestions', request);
-      return response;
+      const response = await apiRequest('POST', '/api/suggestions', request);
+      const data = await response.json();
+      return data as SuggestionResponse;
     },
     onSuccess: (data) => {
       setAiSuggestions(data.suggestions);
