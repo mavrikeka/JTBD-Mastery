@@ -30,6 +30,9 @@ export default function CritiqueMode() {
       return response;
     },
     onSuccess: (data) => {
+      console.log('✅ Critique data received:', data);
+      console.log('Overall score:', data.overallScore);
+      console.log('Component scores:', data.whatScore, data.howMuchScore, data.whenScore);
       setCritique(data);
       toast({
         title: "Analysis complete",
