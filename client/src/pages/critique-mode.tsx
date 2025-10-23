@@ -26,7 +26,9 @@ export default function CritiqueMode() {
 
   const critiqueMutation = useMutation({
     mutationFn: async (request: CritiqueRequest) => {
+      console.log('🚀 Sending request to API...');
       const response = await apiRequest<CritiqueResponse>('POST', '/api/critique', request);
+      console.log('📦 Raw API response:', response);
       return response;
     },
     onSuccess: (data) => {
@@ -57,6 +59,8 @@ export default function CritiqueMode() {
       });
       return;
     }
+    console.log('🔥 Starting critique request...');
+    console.log('JTBD input:', jtbdInput);
     critiqueMutation.mutate({ jtbdStatement: jtbdInput });
   };
 
