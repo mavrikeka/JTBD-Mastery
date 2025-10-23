@@ -4,9 +4,10 @@ import { useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Plus, X, Lightbulb, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, X, Lightbulb, Loader2, ChevronDown, Info } from "lucide-react";
 import { ProgressBar } from "@/components/progress-bar";
 import { buildScenarios } from "@/data/build-scenarios";
 import { BuildScenario, SuggestionRequest, SuggestionResponse } from "@shared/schema";
@@ -227,6 +228,7 @@ export default function BuildMode() {
     return (
       <BuildStepLayout
         step={currentStep}
+        scenario={selectedScenario}
         onBack={() => setStage('context')}
         onNext={() => setStage('metrics')}
         nextDisabled={!buildData.what.trim()}
@@ -313,6 +315,7 @@ export default function BuildMode() {
     return (
       <BuildStepLayout
         step={currentStep}
+        scenario={selectedScenario}
         onBack={() => setStage('what')}
         onNext={() => setStage('when')}
         nextDisabled={buildData.metrics.length === 0 || buildData.metrics.some(m => !m.name || !m.current || !m.target)}
@@ -398,6 +401,7 @@ export default function BuildMode() {
     return (
       <BuildStepLayout
         step={currentStep}
+        scenario={selectedScenario}
         onBack={() => setStage('metrics')}
         onNext={() => setStage('review')}
         nextDisabled={!buildData.when.trim()}
@@ -522,17 +526,21 @@ function ScenarioCard({ scenario, onSelect }: { scenario: BuildScenario; onSelec
 
 function BuildStepLayout({
   step,
+  scenario,
   onBack,
   onNext,
   nextDisabled,
   children,
 }: {
   step: number;
+  scenario?: BuildScenario;
   onBack: () => void;
   onNext: () => void;
   nextDisabled: boolean;
   children: React.ReactNode;
 }) {
+  const [isScenarioOpen, setIsScenarioOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="p-4 border-b border-border">
@@ -559,6 +567,56 @@ function BuildStepLayout({
       
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-3xl mx-auto">
+          {scenario && (
+            <Collapsible open={isScenarioOpen} onOpenChange={setIsScenarioOpen} className="mb-6">
+              <CollapsibleTrigger asChild>
+                <Card className="p-4 hover-elevate cursor-pointer" data-testid="button-toggle-scenario">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                        <Info className="w-4 h-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-foreground">{scenario.role}</p>
+                        <p className="text-sm text-muted-foreground">Click to view scenario context</p>
+                      </div>
+                    </div>
+                    <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${isScenarioOpen ? 'rotate-180' : ''}`} />
+                  </div>
+                </Card>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent>
+                <Card className="mt-2 p-6 bg-card/50 border-card-border">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-semibold text-primary mb-1">COMPANY</h3>
+                      <p className="text-foreground">{scenario.context.company}</p>
+                      <p className="text-sm text-muted-foreground">{scenario.context.size}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-semibold text-primary mb-2">THE SITUATION</h3>
+                      <ul className="space-y-1">
+                        {scenario.context.situation.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm">
+                            <span className="text-primary mt-0.5">•</span>
+                            <span className="text-foreground">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className="pt-3 border-t border-border">
+                      <h3 className="text-sm font-semibold text-primary mb-1">YOUR VALUE AGENDA</h3>
+                      <p className="text-foreground font-medium text-sm">{scenario.context.valueAgenda}</p>
+                    </div>
+                  </div>
+                </Card>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
