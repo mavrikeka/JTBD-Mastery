@@ -27,9 +27,10 @@ export default function CritiqueMode() {
   const critiqueMutation = useMutation({
     mutationFn: async (request: CritiqueRequest) => {
       console.log('🚀 Sending request to API...');
-      const response = await apiRequest<CritiqueResponse>('POST', '/api/critique', request);
-      console.log('📦 Raw API response:', response);
-      return response;
+      const response = await apiRequest('POST', '/api/critique', request);
+      const data = await response.json();
+      console.log('📦 Parsed JSON data:', data);
+      return data as CritiqueResponse;
     },
     onSuccess: (data) => {
       console.log('✅ Critique data received:', data);
