@@ -8,8 +8,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Critique endpoint - analyze JTBD with Claude Sonnet 4
   app.post("/api/critique", async (req, res) => {
     try {
+      console.log('📥 Critique request received:', req.body);
       const request = critiqueRequestSchema.parse(req.body);
+      console.log('✅ Request validated:', request);
       const critique = await critiqueJTBD(request);
+      console.log('✅ Critique generated:', critique);
       res.json(critique);
     } catch (error) {
       if (error instanceof z.ZodError) {
