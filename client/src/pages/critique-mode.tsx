@@ -101,7 +101,8 @@ export default function CritiqueMode() {
   const critiqueMutation = useMutation({
     mutationFn: async (request: CritiqueRequest) => {
       console.log('🚀 Sending request to API...');
-      const response = await apiRequest('POST', '/api/critique', request);
+      // Use 60 second timeout for Claude Sonnet 4
+      const response = await apiRequest('POST', '/api/critique', request, 60000);
       const data = await response.json();
       console.log('📦 Parsed JSON data:', data);
       return { data: data as CritiqueResponse, statement: request.jtbdStatement };
@@ -405,16 +406,14 @@ export default function CritiqueMode() {
                 >
                   Return to Menu
                 </Button>
-                {!isViewingHistory && (
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={handleReset}
-                    data-testid="button-analyze-another"
-                  >
-                    Analyze Another
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleReset}
+                  data-testid="button-analyze-another"
+                >
+                  Analyze Another
+                </Button>
               </div>
             </motion.div>
           )}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '../navigation/SimpleNavigator';
 import { useMutation } from '@tanstack/react-query';
 import { ChevronDown, ChevronUp, Search } from 'lucide-react-native';
 import { Button } from '../components/Button';
@@ -85,6 +86,7 @@ function getOverallStatusStyle(status: 'not-ready' | 'needs-work' | 'ready' | 'e
 }
 
 export default function CritiquePage() {
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [jtbdStatement, setJtbdStatement] = useState('');
   const [critique, setCritique] = useState<CritiqueResponse | null>(null);
@@ -124,9 +126,9 @@ export default function CritiquePage() {
         return critiqueCache.get(cacheKey)!;
       }
 
-      // Make API call if not cached - use 30 second timeout for Claude Sonnet 4
+      // Make API call if not cached - use 60 second timeout for Claude Sonnet 4
       console.log('🌐 Fetching new critique from API');
-      const response = await apiRequest('POST', '/api/critique', request, 30000);
+      const response = await apiRequest('POST', '/api/critique', request, 60000);
       const data = await response.json();
 
       // Cache the result
@@ -342,6 +344,25 @@ export default function CritiquePage() {
             </>
           )}
         </Card>
+      )}
+
+      {critique && (
+        <View style={{ gap: 12, marginTop: theme.spacing.lg }}>
+          <Button onPress={() => navigation.goBack()} fullWidth>
+            Return to Menu
+          </Button>
+          <Button
+            variant="outline"
+            onPress={() => {
+              setJtbdStatement('');
+              setCritique(null);
+              setIsViewingHistory(false);
+            }}
+            fullWidth
+          >
+            Analyze Another
+          </Button>
+        </View>
       )}
     </ScrollView>
   );

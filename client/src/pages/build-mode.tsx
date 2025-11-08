@@ -108,7 +108,8 @@ export default function BuildMode() {
 
   const suggestionsMutation = useMutation({
     mutationFn: async (request: SuggestionRequest) => {
-      const response = await apiRequest('POST', '/api/suggestions', request);
+      // Use 60 second timeout for GPT-4o AI calls
+      const response = await apiRequest('POST', '/api/suggestions', request, 60000);
       const data = await response.json();
       return { data: data as SuggestionResponse, request };
     },
@@ -133,7 +134,8 @@ export default function BuildMode() {
 
   const polishMutation = useMutation({
     mutationFn: async (rawStatement: string) => {
-      const response = await apiRequest('POST', '/api/polish-jtbd', { rawStatement });
+      // Use 60 second timeout for Claude Sonnet 4
+      const response = await apiRequest('POST', '/api/polish-jtbd', { rawStatement }, 60000);
       const data = await response.json();
       return data.polishedStatement as string;
     },
@@ -753,23 +755,22 @@ export default function BuildMode() {
               >
                 Return to Menu
               </Button>
-              {!isViewingHistory && (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => {
-                    // Reset and go back to scenarios
-                    setBuildData({ scenarioId: '', what: '', metrics: [], when: '' });
-                    setSelectedScenario(null);
-                    setPolishedStatement('');
-                    setStage('scenarios');
-                  }}
-                  data-testid="button-build-another"
-                  disabled={polishMutation.isPending}
-                >
-                  Build Another
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  // Reset and go back to scenarios
+                  setBuildData({ scenarioId: '', what: '', metrics: [], when: '' });
+                  setSelectedScenario(null);
+                  setPolishedStatement('');
+                  setStage('scenarios');
+                  setIsViewingHistory(false);
+                }}
+                data-testid="button-build-another"
+                disabled={polishMutation.isPending}
+              >
+                Build Another
+              </Button>
             </div>
           </div>
         </div>

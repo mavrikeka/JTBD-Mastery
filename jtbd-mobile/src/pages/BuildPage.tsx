@@ -95,9 +95,9 @@ export default function BuildPage() {
         return { suggestions: suggestionsCache.get(cacheKey)! };
       }
 
-      // Make API call if not cached
+      // Make API call if not cached - use 60 second timeout for GPT-4o
       console.log('🌐 Fetching new suggestions from API');
-      const response = await apiRequest('POST', '/api/suggestions', request);
+      const response = await apiRequest('POST', '/api/suggestions', request, 60000);
       const data = await response.json();
 
       // Cache the result
@@ -118,8 +118,8 @@ export default function BuildPage() {
 
   const polishMutation = useMutation({
     mutationFn: async (rawStatement: string) => {
-      // Use 30 second timeout for Claude Sonnet 4
-      const response = await apiRequest('POST', '/api/polish-jtbd', { rawStatement }, 30000);
+      // Use 60 second timeout for Claude Sonnet 4
+      const response = await apiRequest('POST', '/api/polish-jtbd', { rawStatement }, 60000);
       const data = await response.json();
       return data.polishedStatement;
     },
@@ -894,29 +894,28 @@ export default function BuildPage() {
 
         <View style={{ gap: 12 }}>
           <Button
-            variant="default"
+            variant="primary"
             onPress={() => navigation.goBack()}
             fullWidth
             disabled={polishMutation.isPending}
           >
             Return to Menu
           </Button>
-          {!isViewingHistory && (
-            <Button
-              variant="outline"
-              onPress={() => {
-                // Reset and go back to scenarios
-                setBuildData({ scenarioId: '', what: '', metrics: [], when: '' });
-                setSelectedScenario(null);
-                setPolishedStatement('');
-                setStage('scenarios');
-              }}
-              fullWidth
-              disabled={polishMutation.isPending}
-            >
-              Build Another
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            onPress={() => {
+              // Reset and go back to scenarios
+              setBuildData({ scenarioId: '', what: '', metrics: [], when: '' });
+              setSelectedScenario(null);
+              setPolishedStatement('');
+              setStage('scenarios');
+              setIsViewingHistory(false);
+            }}
+            fullWidth
+            disabled={polishMutation.isPending}
+          >
+            Build Another
+          </Button>
         </View>
       </ScrollView>
     );
