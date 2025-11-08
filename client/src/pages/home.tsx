@@ -186,7 +186,7 @@ export default function Home() {
                             key={index}
                             className="p-3 rounded-lg bg-background border border-border hover-elevate cursor-pointer"
                             onClick={() => {
-                              localStorage.setItem('critique-prefill', item.statement);
+                              localStorage.setItem('view-critique', JSON.stringify(item));
                               setLocation('/critique');
                             }}
                           >

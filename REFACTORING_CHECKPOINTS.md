@@ -843,7 +843,11 @@ If issues arise:
 - ✅ **FIXED:** Web app Build mode now shows "What you're building" on metrics and when steps
 - ✅ **OPTIMIZED:** AI prompt for metrics now prioritizes user's "what" statement over scenario context
 - ✅ **OPTIMIZED:** AI prompt for timeline now extracts complexity from WHAT + HOW MUCH for better estimates
+- ✅ **OPTIMIZED:** Polish JTBD prompt now generates flowing sentences with proper grammar and verbs
 - ✅ **FIXED:** Metrics AI suggestions panel now stays open for easy multi-selection (both apps)
+- ✅ **FIXED:** Critique toast messages now show status instead of non-existent score (web)
+- ✅ **FIXED:** Web app now loads and displays critique data when viewing from Recent Work
+- ✅ **ENHANCED:** Critique history now loads in read-only mode with "Edit & Re-Critique" button (both apps)
 - ✅ **IMPORTANT:** Maintained functional parity between mobile and web apps
 
 ---
@@ -1021,3 +1025,278 @@ onClick={() => {
 - ✅ Applied to both web and mobile apps
 
 **Note:** This behavior is specific to the metrics step. The "what" and "when" steps still auto-close the panel after selection since users typically only pick one suggestion.
+
+---
+
+#### Polish JTBD Prompt Improvement: Better Sentence Flow and Grammar
+**Location:** `server/ai-service.ts:378-421`
+
+**Problem:**
+The polished JTBD statements were reading like awkward comma-separated lists rather than flowing professional sentences. Example output:
+- ❌ "Build strategic sourcing partnerships, COGS as a percentage of revenue from 72% to 68.4%, Number of strategic sourcing partnerships from 5 to 15, by Q2 2027"
+
+Issues:
+- Missing verbs for metrics (reducing, increasing, expanding)
+- Repetition when WHAT and metrics refer to same thing
+- Poor grammar and flow
+- Reading like a list, not a sentence
+
+**Solution:**
+Enhanced the polish prompt with specific grammar patterns, concrete examples, and explicit instructions for handling multiple metrics and avoiding repetition.
+
+**Key Improvements:**
+1. Added explicit verbs: "reducing", "increasing", "improving", "expanding", "achieving"
+2. Grammar patterns for single vs multiple metrics
+3. Instruction to avoid repetition by integrating elegantly
+4. Three GOOD examples showing proper structure
+5. Three BAD examples showing what to avoid
+
+**Before:**
+```javascript
+const instructions = `Take this JTBD statement and transform it into a flowing sentence.
+
+Requirements:
+- Combine all parts into ONE flowing sentence
+- Maintain all specific details
+- Use professional business language
+- Keep it concise but complete
+```
+
+**After:**
+```javascript
+const instructions = `Take this JTBD statement and transform it into a flowing sentence.
+
+Requirements:
+- Add appropriate verbs for metrics: "reducing", "increasing", "improving", "expanding"
+- Use proper conjunctions: "and", "while", "by"
+- Avoid repetition - integrate elegantly
+- Maintain all specific details
+- Ensure proper grammar
+
+Grammar patterns:
+- Single metric: "[WHAT], [verb]ing [metric] from X to Y by [WHEN]"
+- Multiple metrics: "[WHAT], [verb]ing [metric 1] and [verb]ing [metric 2], by [WHEN]"
+
+GOOD examples:
+"Expand strategic sourcing partnerships from 5 to 15 suppliers, reducing COGS from 72% to 68.4% of revenue by Q2 2027"
+
+"Implement lean manufacturing and Six Sigma quality control systems, reducing defect rate from 4.5% to 1.2% and eliminating $2.1M in annual losses by December 2026"
+
+BAD examples to AVOID:
+❌ "Build partnerships, COGS from 72% to 68.4%, Partnerships from 5 to 15, by Q2 2027"
+```
+
+**Impact:**
+- ✅ Polished JTBDs now read as professional, flowing sentences
+- ✅ Proper grammar with active verbs for metrics
+- ✅ No repetition when WHAT and metrics overlap
+- ✅ Better readability and professionalism
+- ✅ Affects both web and mobile apps (server-side change)
+
+**Expected Output Examples:**
+- "Expand strategic sourcing partnerships from 5 to 15 suppliers, reducing COGS from 72% to 68.4% of revenue by Q2 2027"
+- "Migrate 200+ legacy applications to AWS cloud infrastructure, reducing IT costs from $45M to $31.5M annually while improving system availability from 99.5% to 99.95% by December 2026"
+
+---
+
+#### Bug Fix: Remove Score References from Critique Toast Messages
+**Location:** `client/src/pages/critique-mode.tsx:105, 137`
+
+**Problem:**
+After refactoring the critique mode to use status-based display (not score-based), the toast notifications still referenced `data.overallScore` which doesn't exist in the API response, showing "undefined/100".
+
+**Solution:**
+Updated toast messages to use `getOverallStatusText(data.overallStatus)` which displays the actual status: "✅ Ready to Execute", "⚠️ Needs Work", etc.
+
+**Before:**
+```typescript
+toast({
+  title: "Analysis complete",
+  description: `Overall score: ${data.overallScore}/100`,  // ❌ overallScore doesn't exist
+});
+```
+
+**After:**
+```typescript
+toast({
+  title: "Analysis complete",
+  description: `Status: ${getOverallStatusText(data.overallStatus)}`,  // ✅ Uses actual status
+});
+```
+
+**Impact:**
+- ✅ Toast messages now show correct status text
+- ✅ No more "undefined/100" display
+- ✅ Consistent with the status-based critique display
+- ✅ Applied to both fresh analysis and cached results
+
+---
+
+#### Fix: Web App Now Loads Critique Data When Viewing History
+**Location:** `client/src/pages/home.tsx:189`, `client/src/pages/critique-mode.tsx:74-97`
+
+**Problem:**
+When clicking a critiqued JTBD from Recent Work on the home screen:
+- **Web app**: Only prefilled the statement, didn't load the critique → user had to click "Analyze" again
+- **Mobile app**: Loaded both statement and critique correctly → showed results immediately
+
+This created inconsistency between platforms.
+
+**Solution:**
+Updated web app to match mobile app behavior - store and load the full critique data (not just the statement).
+
+**Changes Made:**
+
+1. **Home page** - Changed from storing just statement to storing full critique object:
+```typescript
+// Before
+onClick={() => {
+  localStorage.setItem('critique-prefill', item.statement);
+  setLocation('/critique');
+}}
+
+// After
+onClick={() => {
+  localStorage.setItem('view-critique', JSON.stringify(item));
+  setLocation('/critique');
+}}
+```
+
+2. **Critique page** - Added logic to load saved critique from history:
+```typescript
+useEffect(() => {
+  // Check for saved critique from Recent Work (full critique data)
+  const savedCritique = localStorage.getItem('view-critique');
+  if (savedCritique) {
+    const data = JSON.parse(savedCritique);
+    setJtbdInput(data.statement);
+    setCritique(data.critique);  // ✅ Load the critique results
+    analyzedStatementRef.current = data.statement;
+    localStorage.removeItem('view-critique');
+    return;
+  }
+
+  // Legacy: Check for old prefill (just statement, no critique)
+  const prefilled = localStorage.getItem('critique-prefill');
+  if (prefilled) {
+    setJtbdInput(prefilled);
+    localStorage.removeItem('critique-prefill');
+  }
+}, []);
+```
+
+**Impact:**
+- ✅ Web app now matches mobile app behavior
+- ✅ Clicking critiqued JTBD from home shows results immediately
+- ✅ No need to re-analyze (saves API calls)
+- ✅ User can still edit statement and re-analyze if desired
+- ✅ Maintains functional parity between platforms
+
+**UX Flow:**
+1. User clicks critiqued JTBD from Recent Work
+2. Critique page opens with statement filled in
+3. Critique results display automatically (no extra click needed)
+4. User can view results, return to menu, or analyze another statement
+
+---
+
+#### UX Enhancement: Read-Only Mode When Viewing Critique History
+**Location:** `client/src/pages/critique-mode.tsx:70, 84, 174-180, 228, 237-278`, `jtbd-mobile/src/pages/CritiquePage.tsx:92, 103, 194, 197-221`
+
+**Problem:**
+After fixing the web app to load critique data from history, both apps showed the critique results but still allowed editing and showed the "Analyze/Get Critique" button. This was confusing UX - when viewing history, users typically just want to review results, not re-analyze.
+
+**User Request:**
+"When viewing history, the statement should be read-only. If users want to re-critique, they should click an 'Edit & Re-Critique' button that unlocks editing."
+
+**Solution:**
+Added read-only mode when loading critique from history, with an "Edit & Re-Critique" button to enable editing if needed.
+
+**Implementation:**
+
+1. **Added state tracking**:
+```typescript
+const [isViewingHistory, setIsViewingHistory] = useState(false);
+```
+
+2. **Set read-only mode when loading from history**:
+```typescript
+useEffect(() => {
+  const savedCritique = localStorage.getItem('view-critique');
+  if (savedCritique) {
+    const data = JSON.parse(savedCritique);
+    setJtbdInput(data.statement);
+    setCritique(data.critique);
+    setIsViewingHistory(true);  // ✅ Enable read-only mode
+    ...
+  }
+}, []);
+```
+
+3. **Disable input when viewing history**:
+```typescript
+// Web
+<Textarea
+  disabled={critiqueMutation.isPending || isViewingHistory}
+  ...
+/>
+
+// Mobile
+<TextArea
+  editable={!isViewingHistory}
+  ...
+/>
+```
+
+4. **Show "Edit & Re-Critique" button instead of "Analyze"**:
+```typescript
+// Web
+{isViewingHistory ? (
+  <Button onClick={handleEnableEditing}>
+    Edit & Re-Critique
+  </Button>
+) : (
+  <Button onClick={handleAnalyze}>
+    Analyze JTBD
+  </Button>
+)}
+
+// Mobile
+{isViewingHistory ? (
+  <Button onPress={() => setIsViewingHistory(false)}>
+    Edit & Re-Critique
+  </Button>
+) : (
+  <Button onPress={handleCritique}>
+    Get Critique
+  </Button>
+)}
+```
+
+5. **Enable editing handler**:
+```typescript
+const handleEnableEditing = () => {
+  setIsViewingHistory(false);
+  toast({ title: "Editing enabled", description: "You can now modify the statement and re-analyze" });
+};
+```
+
+**Impact:**
+- ✅ Clear distinction between viewing history (read-only) and creating new critique (editable)
+- ✅ Prevents accidental re-analysis
+- ✅ Users can still edit if needed by clicking "Edit & Re-Critique"
+- ✅ Better UX - intent is clear based on button text
+- ✅ Applied to both web and mobile apps
+- ✅ Maintains functional parity
+
+**UX Flow (Viewing History):**
+1. User clicks critiqued JTBD from Recent Work
+2. Page loads with:
+   - Statement in **read-only** text field (grayed out/disabled)
+   - Critique results displayed
+   - "Edit & Re-Critique" button visible
+3. If user wants to modify:
+   - Click "Edit & Re-Critique"
+   - Input becomes editable
+   - Button changes to "Analyze JTBD" / "Get Critique"
+   - User can modify and re-analyze

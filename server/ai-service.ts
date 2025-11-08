@@ -383,11 +383,40 @@ ${rawStatement}
 
 Requirements:
 - Combine all parts (WHAT, HOW MUCH, WHEN) into ONE flowing sentence
+- Add appropriate verbs for metrics: "reducing", "increasing", "improving", "expanding", "achieving", etc.
+- Use proper conjunctions: "and", "while", "by" to connect clauses smoothly
+- Avoid repetition - if the WHAT and a metric refer to the same thing, integrate them elegantly
 - Maintain all specific details, metrics, and deadlines
 - Use professional business language
-- Ensure it reads naturally and professionally
+- Ensure it reads naturally with proper grammar
 - Keep it concise but complete
-- Do NOT lose any important information from the original
+
+Grammar patterns to follow:
+- For single metric: "[WHAT], [verb]ing [metric] from X to Y by [WHEN]"
+- For multiple metrics: "[WHAT], [verb]ing [metric 1] from X to Y and [verb]ing [metric 2] from A to B, by [WHEN]"
+- Alternative structure: "[WHAT] to achieve [metric 1] from X to Y and [metric 2] from A to B by [WHEN]"
+
+Examples of GOOD polish:
+
+Input: "Build strategic sourcing partnerships | COGS: 72% → 68.4% | Partnerships: 5 → 15 | Q2 2027"
+Output: "Expand strategic sourcing partnerships from 5 to 15 suppliers, reducing COGS from 72% to 68.4% of revenue by Q2 2027"
+
+Input: "Implement lean manufacturing | Defect rate: 4.5% → 1.2% | Annual losses: $2.1M → $0 | Dec 2026"
+Output: "Implement lean manufacturing and Six Sigma quality control systems, reducing defect rate from 4.5% to 1.2% and eliminating $2.1M in annual losses by December 2026"
+
+Input: "Migrate applications to AWS | IT costs: $45M → $31.5M | Availability: 99.5% → 99.95% | Dec 2026"
+Output: "Migrate 200+ legacy applications to AWS cloud infrastructure, reducing IT costs from $45M to $31.5M annually while improving system availability from 99.5% to 99.95% by December 2026"
+
+Examples of BAD polish to AVOID:
+
+❌ "Build strategic sourcing partnerships, COGS as a percentage of revenue from 72% to 68.4%, Number of strategic sourcing partnerships from 5 to 15, by Q2 2027"
+(Missing verbs, awkward list structure, repetitive)
+
+❌ "Do the work, metric goes from X to Y, by deadline"
+(Too informal, vague)
+
+❌ "Achieve goals through implementation"
+(Lost all specific details)
 
 Respond with ONLY the polished statement (no extra text, explanations, or quotes).`;
 

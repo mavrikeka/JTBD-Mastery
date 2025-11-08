@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Keyboard, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useMutation } from '@tanstack/react-query';
@@ -89,6 +89,7 @@ export default function CritiquePage() {
   const [jtbdStatement, setJtbdStatement] = useState('');
   const [critique, setCritique] = useState<CritiqueResponse | null>(null);
   const [expandedSection, setExpandedSection] = useState<'what' | 'howMuch' | 'when' | null>(null);
+  const [isViewingHistory, setIsViewingHistory] = useState(false);
 
   // Load saved critique from Recent Work if available
   useEffect(() => {
@@ -99,9 +100,10 @@ export default function CritiquePage() {
           const data = JSON.parse(saved);
           setJtbdStatement(data.statement);
           setCritique(data.critique);
+          setIsViewingHistory(true); // Mark as viewing history (read-only mode)
           // Clear after loading
           await AsyncStorage.removeItem('view-critique');
-          console.log('📖 Loaded saved critique from Recent Work');
+          console.log('📖 Loaded saved critique from Recent Work (read-only mode)');
         }
       } catch (e) {
         console.error('Failed to load saved critique:', e);
@@ -189,17 +191,34 @@ export default function CritiquePage() {
         onChangeText={setJtbdStatement}
         placeholder="Paste your Jobs-to-be-Done statement here..."
         minHeight={150}
+        editable={!isViewingHistory}
       />
 
-      <Button
-        onPress={handleCritique}
-        disabled={!jtbdStatement.trim() || critiqueMutation.isPending}
-        loading={critiqueMutation.isPending}
-        fullWidth
-        size="lg"
-      >
-        Get Critique
-      </Button>
+      {isViewingHistory ? (
+        <Button
+          onPress={() => {
+            setIsViewingHistory(false);
+            Alert.alert(
+              'Editing Enabled',
+              'You can now modify the statement and re-analyze'
+            );
+          }}
+          fullWidth
+          size="lg"
+        >
+          Edit & Re-Critique
+        </Button>
+      ) : (
+        <Button
+          onPress={handleCritique}
+          disabled={!jtbdStatement.trim() || critiqueMutation.isPending}
+          loading={critiqueMutation.isPending}
+          fullWidth
+          size="lg"
+        >
+          Get Critique
+        </Button>
+      )}
 
       {critique && (
         <Card style={styles.resultCard}>

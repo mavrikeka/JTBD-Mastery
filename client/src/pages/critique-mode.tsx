@@ -67,11 +67,30 @@ export default function CritiqueMode() {
   const [expandedWhat, setExpandedWhat] = useState(false);
   const [expandedHowMuch, setExpandedHowMuch] = useState(false);
   const [expandedWhen, setExpandedWhen] = useState(false);
+  const [isViewingHistory, setIsViewingHistory] = useState(false);
 
   // Cache for critique results
   const critiqueCache = useRef(new Map<string, CritiqueResponse>());
 
   useEffect(() => {
+    // Check for saved critique from Recent Work (full critique data)
+    const savedCritique = localStorage.getItem('view-critique');
+    if (savedCritique) {
+      try {
+        const data = JSON.parse(savedCritique);
+        setJtbdInput(data.statement);
+        setCritique(data.critique);
+        analyzedStatementRef.current = data.statement;
+        setIsViewingHistory(true); // Mark as viewing history (read-only mode)
+        localStorage.removeItem('view-critique');
+        console.log('📖 Loaded saved critique from Recent Work (read-only mode)');
+      } catch (e) {
+        console.error('Failed to load saved critique:', e);
+      }
+      return;
+    }
+
+    // Legacy: Check for old prefill (just statement, no critique)
     const prefilled = localStorage.getItem('critique-prefill');
     if (prefilled) {
       setJtbdInput(prefilled);
@@ -102,7 +121,7 @@ export default function CritiqueMode() {
       }
       toast({
         title: "Analysis complete",
-        description: `Overall score: ${data.overallScore}/100`,
+        description: `Status: ${getOverallStatusText(data.overallStatus)}`,
       });
     },
     onError: (error: any) => {
@@ -134,7 +153,7 @@ export default function CritiqueMode() {
       analyzedStatementRef.current = jtbdInput;
       toast({
         title: "Analysis complete (cached)",
-        description: `Overall score: ${cached.overallScore}/100`,
+        description: `Status: ${getOverallStatusText(cached.overallStatus)}`,
       });
       return;
     }
@@ -149,6 +168,15 @@ export default function CritiqueMode() {
     setJtbdInput("");
     setCritique(null);
     analyzedStatementRef.current = "";
+    setIsViewingHistory(false);
+  };
+
+  const handleEnableEditing = () => {
+    setIsViewingHistory(false);
+    toast({
+      title: "Editing enabled",
+      description: "You can now modify the statement and re-analyze",
+    });
   };
 
   return (
@@ -197,7 +225,7 @@ export default function CritiqueMode() {
                   placeholder='Example: "Implement lean manufacturing and Six Sigma quality control systems across all production lines, reducing defect rate from 4.5% to 1.2% and eliminating $2.1M in annual losses by December 2026"'
                   rows={6}
                   className="w-full"
-                  disabled={critiqueMutation.isPending}
+                  disabled={critiqueMutation.isPending || isViewingHistory}
                   data-testid="input-jtbd-statement"
                 />
                 <p className="text-sm text-muted-foreground mt-2">
@@ -206,27 +234,39 @@ export default function CritiqueMode() {
               </div>
 
               <div className="flex gap-3">
-                <Button
-                  variant="default"
-                  size="lg"
-                  onClick={handleAnalyze}
-                  disabled={critiqueMutation.isPending || !jtbdInput.trim()}
-                  className="flex-1"
-                  data-testid="button-analyze"
-                >
-                  {critiqueMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="w-5 h-5 mr-2" />
-                      Analyze JTBD
-                    </>
-                  )}
-                </Button>
-                {critique && (
+                {isViewingHistory ? (
+                  <Button
+                    variant="default"
+                    size="lg"
+                    onClick={handleEnableEditing}
+                    className="flex-1"
+                    data-testid="button-enable-editing"
+                  >
+                    Edit & Re-Critique
+                  </Button>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="lg"
+                    onClick={handleAnalyze}
+                    disabled={critiqueMutation.isPending || !jtbdInput.trim()}
+                    className="flex-1"
+                    data-testid="button-analyze"
+                  >
+                    {critiqueMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-5 h-5 mr-2" />
+                        Analyze JTBD
+                      </>
+                    )}
+                  </Button>
+                )}
+                {critique && !isViewingHistory && (
                   <Button
                     variant="outline"
                     size="lg"
