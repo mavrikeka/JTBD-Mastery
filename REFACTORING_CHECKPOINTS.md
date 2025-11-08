@@ -582,6 +582,36 @@ useEffect(() => {
 - Collapsible component sections for better UX
 - Status-based feedback instead of arbitrary numeric scores
 
+#### 8. Fixed Web App Build Mode Missing Context
+**Web Location:** `client/src/pages/build-mode.tsx`
+**Mobile App:** Already showing "What you're building" correctly
+
+**Issue Found:**
+- Web app Build mode missing "What you're building" section on metrics and when steps
+- Mobile app correctly shows this context to remind users what they're measuring/scheduling
+- Users lost context when moving between build steps in web app
+
+**Fix Applied:**
+- Added "What you're building" card to metrics stage (after title, before tip)
+- Added "What you're building" card to when stage (after title, before strategic view)
+- Card displays the `buildData.what` value from step 1
+- Styled with accent background to differentiate from other cards
+
+**Code Pattern:**
+```typescript
+{buildData.what && (
+  <Card className="p-4 bg-accent/50 border-accent">
+    <p className="text-xs font-semibold text-muted-foreground mb-2">WHAT YOU'RE BUILDING:</p>
+    <p className="text-foreground">{buildData.what}</p>
+  </Card>
+)}
+```
+
+**Result:**
+- Web app now shows context on all build steps like mobile app
+- Better UX - users can see what they're building while adding metrics/deadlines
+- Maintains functional parity with mobile app
+
 ### Testing Done (Both Mobile & Web):
 - ✅ Quiz review shows all questions with correct answers highlighted
 - ✅ User's incorrect answers are marked with "(Your answer)"
@@ -598,6 +628,8 @@ useEffect(() => {
 - ✅ Web app Critique mode shows status badges not numeric scores (NEW)
 - ✅ Critique components are collapsible with feedback and suggestions (NEW)
 - ✅ Both mobile and web apps use the same API schema correctly (NEW)
+- ✅ Web app Build mode shows "What you're building" on metrics step (NEW)
+- ✅ Web app Build mode shows "What you're building" on when step (NEW)
 - ✅ Both mobile and web apps have identical functional behavior
 
 ### Known Issues:
@@ -796,10 +828,10 @@ If issues arise:
 
 ---
 
-**Last Updated:** Session 6 Completion - Quiz Review & Recent Work Enhancement
+**Last Updated:** Session 6 Completion - Quiz Review & Recent Work Enhancement + AI Prompt Optimization
 **Next Checkpoint:** Start SESSION 7 - End-to-End Testing & Verification
 
-**Recent Changes (Session 6 + Bug Fixes):**
+**Recent Changes (Session 6 + Bug Fixes + AI Optimization):**
 - ✅ Added quiz review functionality to BOTH mobile and web apps
 - ✅ Users can now see which questions they got right/wrong on both platforms
 - ✅ Quiz results saved to storage and displayed in Recent Work (both platforms)
@@ -808,4 +840,184 @@ If issues arise:
 - ✅ **FIXED:** Multi-select quiz questions now show "Submit Answer" button (both apps)
 - ✅ **FIXED:** Web app AI suggestions state no longer persists across build steps
 - ✅ **FIXED:** Web app Critique mode now uses correct schema (status-based not score-based)
+- ✅ **FIXED:** Web app Build mode now shows "What you're building" on metrics and when steps
+- ✅ **OPTIMIZED:** AI prompt for metrics now prioritizes user's "what" statement over scenario context
+- ✅ **OPTIMIZED:** AI prompt for timeline now extracts complexity from WHAT + HOW MUCH for better estimates
+- ✅ **FIXED:** Metrics AI suggestions panel now stays open for easy multi-selection (both apps)
 - ✅ **IMPORTANT:** Maintained functional parity between mobile and web apps
+
+---
+
+## 🎯 SESSION 6.5: AI Prompt Optimization for Better Metrics Suggestions
+
+### Status: **COMPLETED**
+### Time Spent: ~15 minutes
+### Files Modified:
+- `server/ai-service.ts`
+
+### Changes Made:
+
+#### Business Logic Improvement: Prioritize User Input Over Scenario Context
+**Location:** `server/ai-service.ts:247-285`
+
+**Problem:**
+The AI prompt for generating metrics suggestions treated the scenario context and user's "what" statement with equal weight. This could lead to generic metrics based on the scenario rather than specific metrics tailored to what the user is actually building.
+
+**Solution:**
+Restructured the prompt to explicitly prioritize the user's input as the PRIMARY FOCUS, with scenario context relegated to supporting/background information.
+
+**Before:**
+```javascript
+instructions = `You are helping someone define measurable metrics for a JTBD statement.
+
+Context:
+${contextDetails}
+
+What they're building: ${request.currentInput || 'none'}
+
+Make metrics that:
+- Are directly relevant to the specific scenario and situation above
+...
+```
+
+**After:**
+```javascript
+instructions = `You are helping someone define measurable metrics for a JTBD statement.
+
+PRIMARY FOCUS - What they're building:
+"${request.currentInput || 'none'}"
+
+This is the specific work/goal that needs to be measured. Your metric suggestions MUST directly measure the success and impact of THIS specific work.
+
+Supporting context (for domain understanding):
+${contextDetails}
+
+Make metrics that:
+- MOST IMPORTANTLY: Directly measure the success and impact of the specific work described above
+- Are realistic and achievable for this specific initiative
+- Align closely with what is being built/implemented
+...
+```
+
+**Impact:**
+- ✅ Metrics are now more specific to user's actual goal
+- ✅ Less generic/scenario-based suggestions
+- ✅ Better alignment between WHAT and HOW MUCH components
+- ✅ Affects both web and mobile apps (server-side change)
+
+**Business Justification:**
+Two users in the same scenario (e.g., "Manufacturing Manager") might have completely different goals:
+- User A: "Implement lean manufacturing systems" → needs metrics about process efficiency, waste reduction
+- User B: "Reduce workplace safety incidents" → needs metrics about injury rates, safety compliance
+
+The AI must focus on the user's specific goal, using the scenario only for domain context/realistic ranges.
+
+---
+
+#### Timeline Estimation Improvement: Extract Complexity from WHAT + HOW MUCH
+**Location:** `server/ai-service.ts:286-333`
+
+**Problem:**
+The AI prompt for generating timeline ("When") suggestions treated scenario context and the actual work/metrics equally. Timelines should be based on the scope of WHAT is being built and the magnitude of change indicated by HOW MUCH metrics, not generic scenario characteristics.
+
+**Solution:**
+Restructured the prompt to prioritize WHAT + HOW MUCH as the PRIMARY FOCUS for extracting complexity signals, with scenario context providing only industry norms.
+
+**Before:**
+```javascript
+instructions = `You are helping someone define a strategic deadline for a JTBD statement.
+
+Context:
+${contextDetails}
+
+The work and metrics: ${request.currentInput || 'none'}
+
+Guidelines:
+- Consider the complexity and scale shown in the scenario context
+...
+```
+
+**After:**
+```javascript
+instructions = `You are helping someone define a strategic deadline for a JTBD statement. Generate 3 realistic timeline suggestions as starting points (these are suggestions, not precise estimates).
+
+PRIMARY FOCUS - Analyze the scope and complexity:
+"${request.currentInput || 'none'}"
+
+Extract timeline signals from:
+1. WHAT (the work scope): Look for scale indicators like "enterprise-wide", "200 applications", "15 factories"
+2. HOW MUCH (the metrics): Analyze the magnitude of change - larger deltas suggest longer timelines
+
+Supporting context (for industry norms):
+${contextDetails}
+
+Generate 3 timeline options:
+1. CONSERVATIVE: Longer timeline accounting for complexity, risks (e.g., 4-5 years)
+2. MODERATE: Balanced timeline (e.g., 2-3 years)
+3. AGGRESSIVE: Faster timeline for focused initiatives (e.g., 12-18 months)
+
+Guidelines:
+- Larger scope/metrics deltas = longer timelines
+- Enterprise-wide/multi-location = add time for rollout
+...
+
+IMPORTANT: These are suggested starting points based on typical complexity patterns. The user knows their actual constraints (budget, resources, urgency) and will adjust accordingly.
+```
+
+**Impact:**
+- ✅ Timeline suggestions now analyze actual work scope (scale keywords, geography)
+- ✅ Considers magnitude of metrics deltas (incremental vs transformational)
+- ✅ Provides 3 options: conservative, moderate, aggressive
+- ✅ Sets proper expectations: these are starting points, not precise estimates
+- ✅ Affects both web and mobile apps (server-side change)
+
+**Acknowledgment of Limitations:**
+Timeline estimation without knowing budget, resources, current state, and organizational constraints is inherently limited. The AI provides reasonable starting point suggestions based on complexity patterns, but users must adjust based on their reality.
+
+**Example:**
+- "Migrate 200 applications to AWS, reducing infrastructure costs from $5M to $2M annually"
+  - AI sees: large scale ("200 applications"), significant delta ($3M savings)
+  - Suggests: Conservative (Q4 2029), Moderate (Q2 2028), Aggressive (Q4 2026)
+  - User adjusts based on actual budget, team size, urgency
+
+---
+
+#### UX Improvement: Keep Metrics AI Suggestions Panel Open
+**Location:** `client/src/pages/build-mode.tsx:547`, `jtbd-mobile/src/pages/BuildPage.tsx:638`
+
+**Problem:**
+In the metrics step, users can add multiple metrics to their JTBD. However, after clicking an AI suggestion to add a metric, the suggestions panel would close, forcing users to click "Get AI Suggestions" again to see the remaining options (even though they were cached).
+
+**Solution:**
+Removed the `setShowHints(false)` call when a metric suggestion is clicked. The panel now stays open, allowing users to easily select 2-3 metrics without reopening the panel.
+
+**Before:**
+```javascript
+onClick={() => {
+  setBuildData({
+    ...buildData,
+    metrics: [...buildData.metrics, { name: name.trim(), current: current.trim(), target: target.trim() }]
+  });
+  setShowHints(false); // ❌ This closed the panel
+}}
+```
+
+**After:**
+```javascript
+onClick={() => {
+  setBuildData({
+    ...buildData,
+    metrics: [...buildData.metrics, { name: name.trim(), current: current.trim(), target: target.trim() }]
+  });
+  // Don't close hints for metrics - user might want to add multiple
+}}
+```
+
+**Impact:**
+- ✅ Better UX for multi-select scenario (metrics step)
+- ✅ Users can quickly add 2-3 metrics without extra clicks
+- ✅ Panel still closes when user clicks "Hide AI Suggestions" button
+- ✅ Panel still auto-closes when navigating to next step
+- ✅ Applied to both web and mobile apps
+
+**Note:** This behavior is specific to the metrics step. The "what" and "when" steps still auto-close the panel after selection since users typically only pick one suggestion.

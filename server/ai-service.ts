@@ -260,10 +260,13 @@ Value Agenda: ${scenario.context.valueAgenda}
 
     instructions = `You are helping someone define measurable metrics for a JTBD statement. Generate 3 specific, quantifiable metric suggestions with realistic before/after values.
 
-Context:
-${contextDetails}
+PRIMARY FOCUS - What they're building:
+"${request.currentInput || 'none'}"
 
-What they're building: ${request.currentInput || 'none'}
+This is the specific work/goal that needs to be measured. Your metric suggestions MUST directly measure the success and impact of THIS specific work.
+
+Supporting context (for domain understanding):
+${contextDetails}
 
 Format: "Metric name: from X to Y"
 Examples:
@@ -272,11 +275,11 @@ Examples:
 - "Operating costs: from $2.4M to $1.8M annually"
 
 Make metrics that:
+- MOST IMPORTANTLY: Directly measure the success and impact of the specific work described above
 - Have concrete numerical values (not vague improvements)
 - Include units of measurement
-- Are realistic and achievable
-- Align with the work being described
-- Are directly relevant to the specific scenario and situation above
+- Are realistic and achievable for this specific initiative
+- Align closely with what is being built/implemented
 
 Respond with ONLY a JSON array of 3 suggestions (no extra text):
 ["Metric 1: from X to Y", "Metric 2: from X to Y", "Metric 3: from X to Y"]`;
@@ -294,23 +297,37 @@ ${scenario.context.situation.map(s => `  - ${s}`).join('\n')}
 Value Agenda: ${scenario.context.valueAgenda}
 `;
 
-    instructions = `You are helping someone define a strategic deadline for a JTBD statement. Generate 3 realistic timeline suggestions for completing major business transformation work.
+    instructions = `You are helping someone define a strategic deadline for a JTBD statement. Generate 3 realistic timeline suggestions as starting points (these are suggestions, not precise estimates).
 
-Context:
+PRIMARY FOCUS - Analyze the scope and complexity:
+"${request.currentInput || 'none'}"
+
+Extract timeline signals from:
+1. WHAT (the work scope): Look for scale indicators like "enterprise-wide", "200 applications", "15 factories", "across 8 countries"
+2. HOW MUCH (the metrics): Analyze the magnitude of change - larger deltas (e.g., 4.5% to 0.5%, $2M to $50M) suggest longer timelines than incremental improvements (e.g., 4.5% to 4.0%)
+
+Supporting context (for industry norms):
 ${contextDetails}
 
-The work and metrics: ${request.currentInput || 'none'}
+Use the industry/company size to understand typical transformation speeds in this domain.
 
 Format: Use quarters and years like "Q4 2026", "Q2 2027", or specific months like "December 2027"
 
+Generate 3 timeline options:
+1. CONSERVATIVE: Longer timeline accounting for complexity, risks, dependencies (e.g., 4-5 years for major transformations)
+2. MODERATE: Balanced timeline (e.g., 2-3 years for typical strategic initiatives)
+3. AGGRESSIVE: Faster timeline for well-resourced, focused initiatives (e.g., 12-18 months)
+
 Guidelines:
-- JTBDs are strategic initiatives, typically 3-5 years out
-- Consider realistic timeframes for business transformation
-- Align with fiscal planning cycles (quarterly or annual)
-- Account for implementation, rollout, and stabilization
-- Consider the complexity and scale shown in the scenario context
+- JTBDs are strategic initiatives, typically 3-5 years out (not 6-month tactical projects)
+- Larger scope/metrics deltas = longer timelines
+- Enterprise-wide/multi-location = add time for rollout
+- Align with fiscal planning cycles (quarterly or annual milestones)
+- Account for implementation, rollout, and stabilization phases
 
 Current date reference: ${new Date().getFullYear()}
+
+IMPORTANT: These are suggested starting points based on typical complexity patterns. The user knows their actual constraints (budget, resources, urgency) and will adjust accordingly.
 
 Respond with ONLY a JSON array of 3 timeline suggestions (no extra text):
 ["Timeline 1", "Timeline 2", "Timeline 3"]`;

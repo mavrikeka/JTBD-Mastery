@@ -635,7 +635,7 @@ export default function BuildPage() {
                       metrics: [...buildData.metrics, { name: suggestion, current: '', target: '' }]
                     });
                   }
-                  setShowHints(false);
+                  // Don't close hints for metrics - user might want to add multiple
                 }}
               >
                 <Card style={styles.hintCard}>

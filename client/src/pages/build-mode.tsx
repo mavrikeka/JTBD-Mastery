@@ -424,6 +424,13 @@ export default function BuildMode() {
             <p className="text-muted-foreground">Every JTBD needs metrics with BEFORE and AFTER values.</p>
           </div>
 
+          {buildData.what && (
+            <Card className="p-4 bg-accent/50 border-accent">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">WHAT YOU'RE BUILDING:</p>
+              <p className="text-foreground">{buildData.what}</p>
+            </Card>
+          )}
+
           <Card className="p-6 bg-primary/5 border-primary/20">
             <p className="text-sm font-semibold text-primary mb-2">💡 TIP:</p>
             <p className="text-muted-foreground">Format: "From X to Y" - Example: "Defect rate from 4.5% to 1.2%"</p>
@@ -537,7 +544,7 @@ export default function BuildMode() {
                             metrics: [...buildData.metrics, { name: suggestion, current: '', target: '' }]
                           });
                         }
-                        setShowHints(false);
+                        // Don't close hints for metrics - user might want to add multiple
                       }}
                       data-testid={`hint-metrics-${i}`}
                     >
@@ -571,6 +578,13 @@ export default function BuildMode() {
             <h2 className="text-2xl font-bold mb-2 text-foreground">When must this be complete?</h2>
             <p className="text-muted-foreground">JTBDs need strategic deadlines - typically 3-5 years out.</p>
           </div>
+
+          {buildData.what && (
+            <Card className="p-4 bg-accent/50 border-accent">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">WHAT YOU'RE BUILDING:</p>
+              <p className="text-foreground">{buildData.what}</p>
+            </Card>
+          )}
 
           <Card className="p-6 bg-primary/5 border-primary/20">
             <p className="text-sm font-semibold text-primary mb-2">💡 STRATEGIC VIEW:</p>
