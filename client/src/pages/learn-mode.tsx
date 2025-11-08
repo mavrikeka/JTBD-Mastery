@@ -8,9 +8,9 @@ import { ProgressBar } from "@/components/progress-bar";
 import { jtbdExamples } from "@/data/jtbd-examples";
 import { quizQuestions } from "@/data/quiz-questions";
 import { JTBDExample, QuizQuestion } from "@shared/schema";
-import { updateLearnProgress } from "@/lib/storage";
+import { updateLearnProgress, saveQuizResult } from "@/lib/storage";
 
-type LearnStage = 'intro' | 'gallery' | 'quiz' | 'summary';
+type LearnStage = 'intro' | 'gallery' | 'quiz' | 'summary' | 'review';
 
 export default function LearnMode() {
   const [, setLocation] = useLocation();
@@ -20,6 +20,48 @@ export default function LearnMode() {
   const [quizAnswers, setQuizAnswers] = useState<Record<number, string[]>>({});
   const [currentQuiz, setCurrentQuiz] = useState(0);
   const [showQuizFeedback, setShowQuizFeedback] = useState(false);
+
+  // Load resume data or quiz result to view on mount
+  useEffect(() => {
+    // Check for quiz result to view
+    const viewQuizData = localStorage.getItem('view-quiz-result');
+    if (viewQuizData) {
+      try {
+        const quizResult = JSON.parse(viewQuizData);
+        setQuizAnswers(quizResult.answers);
+        setStage('review');
+        localStorage.removeItem('view-quiz-result'); // Clear after loading
+        return;
+      } catch (e) {
+        console.error('Failed to load quiz result:', e);
+      }
+    }
+
+    // Check for resume data
+    const resumeData = localStorage.getItem('resume-learn');
+    if (resumeData) {
+      try {
+        const { currentExample: savedExample, stage: savedStage } = JSON.parse(resumeData);
+        setCurrentExample(savedExample);
+        setStage(savedStage);
+        localStorage.removeItem('resume-learn'); // Clear after loading
+      } catch (e) {
+        console.error('Failed to load resume data:', e);
+      }
+    }
+  }, []);
+
+  // Save resume state on unmount (unless completed)
+  useEffect(() => {
+    return () => {
+      if (stage !== 'summary') {
+        localStorage.setItem('resume-learn', JSON.stringify({
+          currentExample,
+          stage,
+        }));
+      }
+    };
+  }, [currentExample, stage]);
 
   useEffect(() => {
     if (stage === 'gallery') {
@@ -39,8 +81,10 @@ export default function LearnMode() {
   useEffect(() => {
     if (stage === 'summary') {
       updateLearnProgress(jtbdExamples.length, quizScore);
+      // Save quiz result for Recent Work
+      saveQuizResult(quizScore, quizQuestions.length, quizAnswers);
     }
-  }, [stage, quizScore]);
+  }, [stage, quizScore, quizAnswers]);
 
   const handleNext = () => {
     if (currentExample < jtbdExamples.length - 1) {
@@ -65,10 +109,15 @@ export default function LearnMode() {
         ? current.filter(id => id !== optionId)
         : [...current, optionId];
       setQuizAnswers({ ...quizAnswers, [quiz.id]: newAnswers });
+      // Don't auto-show feedback for multi-select, wait for Submit button
     } else {
       setQuizAnswers({ ...quizAnswers, [quiz.id]: [optionId] });
       setShowQuizFeedback(true);
     }
+  };
+
+  const handleSubmitMultiSelect = () => {
+    setShowQuizFeedback(true);
   };
 
   const handleQuizNext = () => {
@@ -122,7 +171,6 @@ export default function LearnMode() {
             
             <Button
               size="lg"
-              variant="primary"
               onClick={() => setStage('gallery')}
               className="px-8"
               data-testid="button-start-learning"
@@ -199,7 +247,6 @@ export default function LearnMode() {
                 Previous
               </Button>
               <Button
-                variant="primary"
                 size="lg"
                 onClick={handleNext}
                 data-testid="button-next"
@@ -238,13 +285,24 @@ export default function LearnMode() {
               question={quiz}
               selectedAnswers={quizAnswers[quiz.id] || []}
               onSelectAnswer={handleQuizAnswer}
-              showFeedback={showQuizFeedback || (quiz.multiSelect && quizAnswers[quiz.id]?.length > 0)}
+              showFeedback={showQuizFeedback}
             />
-            
-            {(showQuizFeedback || (quiz.multiSelect && quizAnswers[quiz.id]?.length > 0)) && (
+
+            {!showQuizFeedback && quiz.multiSelect && (quizAnswers[quiz.id]?.length > 0) && (
               <div className="mt-8 flex justify-center">
                 <Button
-                  variant="primary"
+                  size="lg"
+                  onClick={handleSubmitMultiSelect}
+                  data-testid="button-submit-answer"
+                >
+                  Submit Answer
+                </Button>
+              </div>
+            )}
+
+            {showQuizFeedback && (
+              <div className="mt-8 flex justify-center">
+                <Button
                   size="lg"
                   onClick={handleQuizNext}
                   data-testid="button-quiz-next"
@@ -253,6 +311,116 @@ export default function LearnMode() {
                 </Button>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Review stage
+  if (stage === 'review') {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="p-4 border-b border-border">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setLocation('/')}
+              data-testid="button-back"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <h2 className="text-lg font-semibold">Review Your Answers</h2>
+            <div className="w-10" />
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-auto p-4 md:p-8">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {quizQuestions.map((question, index) => {
+              const userAnswers = quizAnswers[question.id] || [];
+              const correctAnswers = question.options.filter(o => o.correct).map(o => o.id);
+              const isCorrect = JSON.stringify(userAnswers.sort()) === JSON.stringify(correctAnswers.sort());
+
+              return (
+                <Card key={question.id} className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-foreground">Question {index + 1}</h3>
+                    {isCorrect ? (
+                      <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-chart-3/20 border border-chart-3">
+                        <Check className="w-4 h-4 text-chart-3" />
+                        <span className="text-sm font-semibold text-chart-3">Correct</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-destructive/20 border border-destructive">
+                        <X className="w-4 h-4 text-destructive" />
+                        <span className="text-sm font-semibold text-destructive">Incorrect</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-foreground mb-4 whitespace-pre-line">{question.question}</p>
+
+                  <div className="space-y-2 mb-4">
+                    {question.options.map((option) => {
+                      const wasSelected = userAnswers.includes(option.id);
+                      const isCorrectOption = option.correct;
+
+                      return (
+                        <div
+                          key={option.id}
+                          className={`
+                            p-3 rounded-lg border-2
+                            ${isCorrectOption
+                              ? 'border-chart-3 bg-chart-3/10'
+                              : wasSelected && !isCorrectOption
+                                ? 'border-destructive bg-destructive/10'
+                                : 'border-border bg-card'
+                            }
+                          `}
+                        >
+                          <div className="flex items-start gap-3">
+                            {isCorrectOption ? (
+                              <Check className="w-5 h-5 text-chart-3 mt-0.5 flex-shrink-0" />
+                            ) : wasSelected ? (
+                              <X className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
+                            ) : (
+                              <div className="w-5 h-5" />
+                            )}
+                            <div className="flex-1">
+                              <p className={`text-foreground ${isCorrectOption ? 'font-semibold' : ''}`}>
+                                {option.text}
+                              </p>
+                              {wasSelected && !isCorrectOption && (
+                                <p className="text-sm text-destructive italic mt-1">(Your answer)</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {question.feedback && (
+                    <div className="p-4 rounded-lg border-2 border-primary/30 bg-primary/5">
+                      <p className="text-foreground">{question.feedback}</p>
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
+
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setLocation('/')}
+                data-testid="button-return-home"
+              >
+                Return to Menu
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -328,13 +496,20 @@ export default function LearnMode() {
             <Button
               variant="outline"
               size="lg"
+              onClick={() => setStage('review')}
+              data-testid="button-review-answers"
+            >
+              Review Answers
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
               onClick={() => setLocation('/')}
               data-testid="button-return-menu"
             >
               Return to Menu
             </Button>
             <Button
-              variant="primary"
               size="lg"
               onClick={() => setLocation('/build')}
               data-testid="button-start-building"

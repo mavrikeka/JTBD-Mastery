@@ -1,20 +1,21 @@
-import { UserProgress, BuiltJTBD, QuizResult } from "@shared/schema";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { UserProgress, BuiltJTBD, QuizResult } from '../shared/schema';
 
 const PROGRESS_KEY = 'jtbd-progress';
 const BUILT_JTBDS_KEY = 'jtbd-built';
 const CRITIQUES_KEY = 'jtbd-critiques';
 const QUIZ_RESULTS_KEY = 'jtbd-quiz-results';
 
-export function getProgress(): UserProgress {
+export async function getProgress(): Promise<UserProgress> {
   try {
-    const saved = localStorage.getItem(PROGRESS_KEY);
+    const saved = await AsyncStorage.getItem(PROGRESS_KEY);
     if (saved) {
       return JSON.parse(saved);
     }
   } catch (e) {
     console.error('Failed to load progress:', e);
   }
-  
+
   return {
     learnMode: { completed: false, examplesViewed: 0 },
     buildMode: { completed: false, jtbdsCreated: 0 },
@@ -22,74 +23,74 @@ export function getProgress(): UserProgress {
   };
 }
 
-export function saveProgress(progress: UserProgress): void {
+export async function saveProgress(progress: UserProgress): Promise<void> {
   try {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+    await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
   } catch (e) {
     console.error('Failed to save progress:', e);
   }
 }
 
-export function updateLearnProgress(examplesViewed: number, quizScore?: number): void {
-  const progress = getProgress();
+export async function updateLearnProgress(examplesViewed: number, quizScore?: number): Promise<void> {
+  const progress = await getProgress();
   progress.learnMode.examplesViewed = examplesViewed;
   if (quizScore !== undefined) {
     progress.learnMode.quizScore = quizScore;
     progress.learnMode.completed = true;
   }
-  saveProgress(progress);
+  await saveProgress(progress);
 }
 
-export function updateBuildProgress(jtbd: BuiltJTBD): void {
-  const progress = getProgress();
+export async function updateBuildProgress(jtbd: BuiltJTBD): Promise<void> {
+  const progress = await getProgress();
   progress.buildMode.jtbdsCreated += 1;
   progress.buildMode.completed = progress.buildMode.jtbdsCreated >= 3;
-  
+
   if (jtbd.score && (!progress.buildMode.bestScore || jtbd.score > progress.buildMode.bestScore)) {
     progress.buildMode.bestScore = jtbd.score;
   }
-  
-  saveProgress(progress);
-  
+
+  await saveProgress(progress);
+
   // Save the built JTBD with timestamp
   try {
-    const saved = localStorage.getItem(BUILT_JTBDS_KEY);
+    const saved = await AsyncStorage.getItem(BUILT_JTBDS_KEY);
     const jtbds: BuiltJTBD[] = saved ? JSON.parse(saved) : [];
-    jtbds.push({ 
-      ...jtbd, 
+    jtbds.push({
+      ...jtbd,
       assembled: jtbd.assembled,
       timestamp: new Date().toISOString()
     });
-    localStorage.setItem(BUILT_JTBDS_KEY, JSON.stringify(jtbds));
+    await AsyncStorage.setItem(BUILT_JTBDS_KEY, JSON.stringify(jtbds));
   } catch (e) {
     console.error('Failed to save built JTBD:', e);
   }
 }
 
-export function updateCritiqueProgress(jtbdStatement: string, critique: any): void {
-  const progress = getProgress();
+export async function updateCritiqueProgress(jtbdStatement: string, critique: any): Promise<void> {
+  const progress = await getProgress();
   progress.critiqueMode.jtbdsCritiqued += 1;
   progress.critiqueMode.completed = progress.critiqueMode.jtbdsCritiqued >= 5;
-  saveProgress(progress);
-  
+  await saveProgress(progress);
+
   // Save the critique with timestamp
   try {
-    const saved = localStorage.getItem(CRITIQUES_KEY);
+    const saved = await AsyncStorage.getItem(CRITIQUES_KEY);
     const critiques: Array<{statement: string, critique: any, timestamp: string}> = saved ? JSON.parse(saved) : [];
-    critiques.push({ 
-      statement: jtbdStatement, 
+    critiques.push({
+      statement: jtbdStatement,
       critique,
       timestamp: new Date().toISOString()
     });
-    localStorage.setItem(CRITIQUES_KEY, JSON.stringify(critiques));
+    await AsyncStorage.setItem(CRITIQUES_KEY, JSON.stringify(critiques));
   } catch (e) {
     console.error('Failed to save critique:', e);
   }
 }
 
-export function getBuiltJTBDs(): BuiltJTBD[] {
+export async function getBuiltJTBDs(): Promise<BuiltJTBD[]> {
   try {
-    const saved = localStorage.getItem(BUILT_JTBDS_KEY);
+    const saved = await AsyncStorage.getItem(BUILT_JTBDS_KEY);
     return saved ? JSON.parse(saved) : [];
   } catch (e) {
     console.error('Failed to load built JTBDs:', e);
@@ -97,9 +98,9 @@ export function getBuiltJTBDs(): BuiltJTBD[] {
   }
 }
 
-export function getCritiques(): Array<{statement: string, critique: any, timestamp: string}> {
+export async function getCritiques(): Promise<Array<{statement: string, critique: any, timestamp: string}>> {
   try {
-    const saved = localStorage.getItem(CRITIQUES_KEY);
+    const saved = await AsyncStorage.getItem(CRITIQUES_KEY);
     return saved ? JSON.parse(saved) : [];
   } catch (e) {
     console.error('Failed to load critiques:', e);
@@ -107,9 +108,9 @@ export function getCritiques(): Array<{statement: string, critique: any, timesta
   }
 }
 
-export function saveQuizResult(score: number, totalQuestions: number, answers: Record<number, string[]>): void {
+export async function saveQuizResult(score: number, totalQuestions: number, answers: Record<number, string[]>): Promise<void> {
   try {
-    const saved = localStorage.getItem(QUIZ_RESULTS_KEY);
+    const saved = await AsyncStorage.getItem(QUIZ_RESULTS_KEY);
     const results: QuizResult[] = saved ? JSON.parse(saved) : [];
 
     results.push({
@@ -119,15 +120,15 @@ export function saveQuizResult(score: number, totalQuestions: number, answers: R
       timestamp: new Date().toISOString()
     });
 
-    localStorage.setItem(QUIZ_RESULTS_KEY, JSON.stringify(results));
+    await AsyncStorage.setItem(QUIZ_RESULTS_KEY, JSON.stringify(results));
   } catch (e) {
     console.error('Failed to save quiz result:', e);
   }
 }
 
-export function getQuizResults(): QuizResult[] {
+export async function getQuizResults(): Promise<QuizResult[]> {
   try {
-    const saved = localStorage.getItem(QUIZ_RESULTS_KEY);
+    const saved = await AsyncStorage.getItem(QUIZ_RESULTS_KEY);
     return saved ? JSON.parse(saved) : [];
   } catch (e) {
     console.error('Failed to load quiz results:', e);

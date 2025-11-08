@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Lightbulb, Hammer, Search, History, Clock } from "lucide-react";
+import { Lightbulb, Hammer, Search, History, Clock, ChevronDown } from "lucide-react";
 import { ModeCard } from "@/components/mode-card";
 import { Card } from "@/components/ui/card";
-import { UserProgress, BuiltJTBD } from "@shared/schema";
-import { getProgress, getBuiltJTBDs, getCritiques } from "@/lib/storage";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { UserProgress, BuiltJTBD, QuizResult } from "@shared/schema";
+import { getProgress, getBuiltJTBDs, getCritiques, getQuizResults } from "@/lib/storage";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -16,11 +17,27 @@ export default function Home() {
   });
   const [builtJTBDs, setBuiltJTBDs] = useState<BuiltJTBD[]>([]);
   const [critiques, setCritiques] = useState<Array<{statement: string, critique: any, timestamp: string}>>([]);
+  const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
+  const [builtJTBDsOpen, setBuiltJTBDsOpen] = useState(true);
+  const [critiquesOpen, setCritiquesOpen] = useState(true);
+  const [quizResultsOpen, setQuizResultsOpen] = useState(true);
 
   useEffect(() => {
+    // Initial load
     setProgress(getProgress());
     setBuiltJTBDs(getBuiltJTBDs().slice(-3).reverse()); // Last 3, most recent first
     setCritiques(getCritiques().slice(-3).reverse()); // Last 3, most recent first
+    setQuizResults(getQuizResults().slice(-3).reverse()); // Last 3, most recent first
+
+    // Auto-refresh every 2 seconds
+    const interval = setInterval(() => {
+      setProgress(getProgress());
+      setBuiltJTBDs(getBuiltJTBDs().slice(-3).reverse());
+      setCritiques(getCritiques().slice(-3).reverse());
+      setQuizResults(getQuizResults().slice(-3).reverse());
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -98,7 +115,7 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {(builtJTBDs.length > 0 || critiques.length > 0) && (
+        {(builtJTBDs.length > 0 || critiques.length > 0 || quizResults.length > 0) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -110,50 +127,135 @@ export default function Home() {
               <h2 className="text-2xl font-bold text-foreground">Your Recent Work</h2>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               {builtJTBDs.length > 0 && (
-                <Card className="p-6 bg-card/50 border-card-border">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Hammer className="w-5 h-5 text-primary" />
-                    <h3 className="text-lg font-semibold text-foreground">Built JTBDs</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {builtJTBDs.map((jtbd, index) => (
-                      <div key={index} className="p-3 rounded-lg bg-background border border-border hover-elevate cursor-pointer" onClick={() => setLocation('/critique')}>
-                        <p className="text-sm text-foreground line-clamp-2">{jtbd.assembled}</p>
-                        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3" />
-                          <span>{jtbd.timestamp ? new Date(jtbd.timestamp).toLocaleDateString() : jtbd.scenarioId}</span>
+                <Collapsible open={builtJTBDsOpen} onOpenChange={setBuiltJTBDsOpen}>
+                  <Card className="bg-card/50 border-card-border overflow-hidden">
+                    <CollapsibleTrigger className="w-full p-6 hover:bg-accent/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Hammer className="w-5 h-5 text-primary" />
+                          <h3 className="text-lg font-semibold text-foreground">Built JTBDs</h3>
+                          <span className="text-sm text-muted-foreground">({builtJTBDs.length})</span>
                         </div>
+                        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${builtJTBDsOpen ? 'rotate-180' : ''}`} />
                       </div>
-                    ))}
-                  </div>
-                </Card>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="px-6 pb-6 space-y-3">
+                        {builtJTBDs.map((jtbd, index) => (
+                          <div
+                            key={index}
+                            className="p-3 rounded-lg bg-background border border-border hover-elevate cursor-pointer"
+                            onClick={() => {
+                              // Store the JTBD data and navigate to build review page
+                              localStorage.setItem('build-review-data', JSON.stringify(jtbd));
+                              setLocation('/build?stage=review');
+                            }}
+                          >
+                            <p className="text-sm text-foreground line-clamp-2">{jtbd.assembled}</p>
+                            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                              <Clock className="w-3 h-3" />
+                              <span>{jtbd.timestamp ? new Date(jtbd.timestamp).toLocaleDateString() : jtbd.scenarioId}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
               )}
 
               {critiques.length > 0 && (
-                <Card className="p-6 bg-card/50 border-card-border">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Search className="w-5 h-5 text-primary" />
-                    <h3 className="text-lg font-semibold text-foreground">Critiqued JTBDs</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {critiques.map((item, index) => (
-                      <div key={index} className="p-3 rounded-lg bg-background border border-border hover-elevate cursor-pointer" onClick={() => setLocation('/critique')}>
-                        <p className="text-sm text-foreground line-clamp-2">{item.statement}</p>
-                        <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                          <span className="font-semibold text-primary">Score: {item.critique.overallScore}/100</span>
-                          {item.timestamp && (
-                            <>
-                              <Clock className="w-3 h-3 ml-auto" />
-                              <span>{new Date(item.timestamp).toLocaleDateString()}</span>
-                            </>
-                          )}
+                <Collapsible open={critiquesOpen} onOpenChange={setCritiquesOpen}>
+                  <Card className="bg-card/50 border-card-border overflow-hidden">
+                    <CollapsibleTrigger className="w-full p-6 hover:bg-accent/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Search className="w-5 h-5 text-primary" />
+                          <h3 className="text-lg font-semibold text-foreground">Critiqued JTBDs</h3>
+                          <span className="text-sm text-muted-foreground">({critiques.length})</span>
                         </div>
+                        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${critiquesOpen ? 'rotate-180' : ''}`} />
                       </div>
-                    ))}
-                  </div>
-                </Card>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="px-6 pb-6 space-y-3">
+                        {critiques.map((item, index) => (
+                          <div
+                            key={index}
+                            className="p-3 rounded-lg bg-background border border-border hover-elevate cursor-pointer"
+                            onClick={() => {
+                              localStorage.setItem('critique-prefill', item.statement);
+                              setLocation('/critique');
+                            }}
+                          >
+                            <p className="text-sm text-foreground line-clamp-2">{item.statement}</p>
+                            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                              <span className="font-semibold text-primary capitalize">Status: {item.critique.overallStatus || 'needs-work'}</span>
+                              {item.timestamp && (
+                                <>
+                                  <Clock className="w-3 h-3 ml-auto" />
+                                  <span>{new Date(item.timestamp).toLocaleDateString()}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
+              )}
+
+              {quizResults.length > 0 && (
+                <Collapsible open={quizResultsOpen} onOpenChange={setQuizResultsOpen}>
+                  <Card className="bg-card/50 border-card-border overflow-hidden">
+                    <CollapsibleTrigger className="w-full p-6 hover:bg-accent/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Lightbulb className="w-5 h-5 text-primary" />
+                          <h3 className="text-lg font-semibold text-foreground">Quiz Results</h3>
+                          <span className="text-sm text-muted-foreground">({quizResults.length})</span>
+                        </div>
+                        <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${quizResultsOpen ? 'rotate-180' : ''}`} />
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="px-6 pb-6 space-y-3">
+                        {quizResults.map((result, index) => {
+                          const percentage = Math.round((result.score / result.totalQuestions) * 100);
+                          const scoreColor = percentage >= 80 ? 'text-chart-3' : percentage >= 60 ? 'text-primary' : 'text-destructive';
+                          const bgColor = percentage >= 80 ? 'bg-chart-3/20 border-chart-3' : percentage >= 60 ? 'bg-primary/20 border-primary' : 'bg-destructive/20 border-destructive';
+
+                          return (
+                            <div
+                              key={index}
+                              className="p-3 rounded-lg bg-background border border-border hover-elevate cursor-pointer"
+                              onClick={() => {
+                                localStorage.setItem('view-quiz-result', JSON.stringify(result));
+                                setLocation('/learn');
+                              }}
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm text-foreground">
+                                  Quiz Score: {result.score}/{result.totalQuestions} ({percentage}%)
+                                </p>
+                                <div className={`flex items-center justify-center w-12 h-12 rounded-full border-2 ${bgColor}`}>
+                                  <span className={`text-sm font-bold ${scoreColor}`}>{percentage}%</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                                <Clock className="w-3 h-3" />
+                                <span>{new Date(result.timestamp).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
               )}
             </div>
           </motion.div>

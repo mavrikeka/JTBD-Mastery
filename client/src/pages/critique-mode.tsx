@@ -19,6 +19,9 @@ export default function CritiqueMode() {
   const [critique, setCritique] = useState<CritiqueResponse | null>(null);
   const analyzedStatementRef = useRef<string>("");
 
+  // Cache for critique results
+  const critiqueCache = useRef(new Map<string, CritiqueResponse>());
+
   useEffect(() => {
     const prefilled = localStorage.getItem('critique-prefill');
     if (prefilled) {
@@ -33,12 +36,17 @@ export default function CritiqueMode() {
       const response = await apiRequest('POST', '/api/critique', request);
       const data = await response.json();
       console.log('📦 Parsed JSON data:', data);
-      return data as CritiqueResponse;
+      return { data: data as CritiqueResponse, statement: request.jtbdStatement };
     },
-    onSuccess: (data) => {
+    onSuccess: ({ data, statement }) => {
       console.log('✅ Critique data received:', data);
       console.log('Overall score:', data.overallScore);
       console.log('Component scores:', data.whatScore, data.howMuchScore, data.whenScore);
+
+      // Cache the result
+      const cacheKey = statement.trim();
+      critiqueCache.current.set(cacheKey, data);
+
       setCritique(data);
       if (analyzedStatementRef.current) {
         updateCritiqueProgress(analyzedStatementRef.current, data);
@@ -67,6 +75,21 @@ export default function CritiqueMode() {
       });
       return;
     }
+
+    // Check cache first
+    const cacheKey = jtbdInput.trim();
+    if (critiqueCache.current.has(cacheKey)) {
+      const cached = critiqueCache.current.get(cacheKey)!;
+      console.log('✨ Using cached critique result');
+      setCritique(cached);
+      analyzedStatementRef.current = jtbdInput;
+      toast({
+        title: "Analysis complete (cached)",
+        description: `Overall score: ${cached.overallScore}/100`,
+      });
+      return;
+    }
+
     console.log('🔥 Starting critique request...');
     console.log('JTBD input:', jtbdInput);
     analyzedStatementRef.current = jtbdInput;

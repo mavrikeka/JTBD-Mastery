@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,14 +37,79 @@ export default function BuildMode() {
   });
   const [showHints, setShowHints] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [polishedStatement, setPolishedStatement] = useState('');
+
+  // Cache for API suggestions
+  const suggestionsCache = useRef(new Map<string, string[]>());
+
+  // Clear cache on unmount
+  useEffect(() => {
+    return () => {
+      suggestionsCache.current.clear();
+    };
+  }, []);
+
+  // Helper function to get suggestions with caching
+  const getSuggestions = (request: SuggestionRequest) => {
+    const cacheKey = JSON.stringify(request);
+
+    // Check cache first
+    if (suggestionsCache.current.has(cacheKey)) {
+      const cached = suggestionsCache.current.get(cacheKey)!;
+      setAiSuggestions(cached);
+      setShowHints(true);
+      return;
+    }
+
+    // Make API call if not cached
+    suggestionsMutation.mutate(request);
+  };
+
+  // Check if loading a saved JTBD from Recent Work
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const stageParam = urlParams.get('stage');
+
+    if (stageParam === 'review') {
+      try {
+        const savedData = localStorage.getItem('build-review-data');
+        if (savedData) {
+          const jtbd = JSON.parse(savedData);
+          const scenario = buildScenarios.find(s => s.id === jtbd.scenarioId);
+
+          if (scenario) {
+            setSelectedScenario(scenario);
+            setBuildData({
+              scenarioId: jtbd.scenarioId,
+              what: jtbd.what,
+              metrics: jtbd.metrics,
+              when: jtbd.when,
+            });
+            setPolishedStatement(jtbd.assembled);
+            setStage('review');
+          }
+
+          // Clean up
+          localStorage.removeItem('build-review-data');
+        }
+      } catch (e) {
+        console.error('Failed to load saved JTBD:', e);
+      }
+    }
+  }, []);
 
   const suggestionsMutation = useMutation({
     mutationFn: async (request: SuggestionRequest) => {
       const response = await apiRequest('POST', '/api/suggestions', request);
       const data = await response.json();
-      return data as SuggestionResponse;
+      return { data: data as SuggestionResponse, request };
     },
-    onSuccess: (data) => {
+    onSuccess: ({ data, request }) => {
+      // Cache the result
+      const cacheKey = JSON.stringify(request);
+      suggestionsCache.current.set(cacheKey, data.suggestions);
+
+      // Update UI
       setAiSuggestions(data.suggestions);
       setShowHints(true);
     },
@@ -55,6 +120,26 @@ export default function BuildMode() {
         variant: "destructive",
       });
       setShowHints(true);
+    },
+  });
+
+  const polishMutation = useMutation({
+    mutationFn: async (rawStatement: string) => {
+      const response = await apiRequest('POST', '/api/polish-jtbd', { rawStatement });
+      const data = await response.json();
+      return data.polishedStatement as string;
+    },
+    onSuccess: (polished) => {
+      setPolishedStatement(polished);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Polish failed",
+        description: error.message || "Using raw statement instead",
+        variant: "destructive",
+      });
+      // Fallback to raw assembled statement
+      setPolishedStatement(assembledJTBD);
     },
   });
 
@@ -90,6 +175,7 @@ export default function BuildMode() {
 
   useEffect(() => {
     if (stage === 'review' && assembledJTBD) {
+      // Save progress
       updateBuildProgress({
         scenarioId: buildData.scenarioId,
         what: buildData.what,
@@ -97,6 +183,11 @@ export default function BuildMode() {
         when: buildData.when,
         assembled: assembledJTBD,
       });
+
+      // Auto-polish the statement
+      if (!polishedStatement && !polishMutation.isPending) {
+        polishMutation.mutate(assembledJTBD);
+      }
     }
   }, [stage, assembledJTBD]);
 
@@ -266,7 +357,7 @@ export default function BuildMode() {
               if (showHints) {
                 setShowHints(false);
               } else {
-                suggestionsMutation.mutate({
+                getSuggestions({
                   scenarioId: selectedScenario.id,
                   step: 'what',
                   currentInput: buildData.what,
@@ -326,12 +417,12 @@ export default function BuildMode() {
             <h2 className="text-2xl font-bold mb-2 text-foreground">How will you measure success?</h2>
             <p className="text-muted-foreground">Every JTBD needs metrics with BEFORE and AFTER values.</p>
           </div>
-          
+
           <Card className="p-6 bg-primary/5 border-primary/20">
             <p className="text-sm font-semibold text-primary mb-2">💡 TIP:</p>
             <p className="text-muted-foreground">Format: "From X to Y" - Example: "Defect rate from 4.5% to 1.2%"</p>
           </Card>
-          
+
           <div className="space-y-4">
             {buildData.metrics.map((metric, index) => (
               <Card key={index} className="p-4 bg-card/50">
@@ -371,7 +462,7 @@ export default function BuildMode() {
                 </div>
               </Card>
             ))}
-            
+
             <Button
               variant="outline"
               onClick={handleAddMetric}
@@ -382,16 +473,78 @@ export default function BuildMode() {
               Add Metric
             </Button>
           </div>
-          
-          {selectedScenario.hints.howMuch.length > 0 && (
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-2">Suggested metrics:</p>
-              <div className="space-y-1">
-                {selectedScenario.hints.howMuch.map((hint, i) => (
+
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (showHints) {
+                setShowHints(false);
+              } else {
+                getSuggestions({
+                  scenarioId: selectedScenario.id,
+                  step: 'metrics',
+                  currentInput: buildData.what,
+                });
+              }
+            }}
+            className="w-full"
+            disabled={suggestionsMutation.isPending}
+            data-testid="button-show-hints-metrics"
+          >
+            {suggestionsMutation.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Getting AI Suggestions...
+              </>
+            ) : (
+              <>
+                <Lightbulb className="w-4 h-4 mr-2" />
+                {showHints ? 'Hide' : 'Get'} AI Suggestions
+              </>
+            )}
+          </Button>
+
+          {showHints && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2">
+              <p className="text-sm font-medium text-primary mb-2">
+                {aiSuggestions.length > 0 ? '💡 AI-Generated Suggestions (click to add):' : 'Suggested metrics:'}
+              </p>
+              {aiSuggestions.length > 0 ? (
+                aiSuggestions.map((suggestion, i) => {
+                  // Parse suggestion format: "Metric name: from X to Y"
+                  const match = suggestion.match(/^(.+?):\s*from\s+(.+?)\s+to\s+(.+)$/i);
+                  return (
+                    <Card
+                      key={i}
+                      className="p-4 hover-elevate cursor-pointer"
+                      onClick={() => {
+                        if (match) {
+                          const [, name, current, target] = match;
+                          setBuildData({
+                            ...buildData,
+                            metrics: [...buildData.metrics, { name: name.trim(), current: current.trim(), target: target.trim() }]
+                          });
+                        } else {
+                          // If format doesn't match, just add the suggestion as the metric name
+                          setBuildData({
+                            ...buildData,
+                            metrics: [...buildData.metrics, { name: suggestion, current: '', target: '' }]
+                          });
+                        }
+                        setShowHints(false);
+                      }}
+                      data-testid={`hint-metrics-${i}`}
+                    >
+                      <p className="text-foreground text-sm">{suggestion}</p>
+                    </Card>
+                  );
+                })
+              ) : (
+                selectedScenario.hints.howMuch.map((hint, i) => (
                   <p key={i} className="text-sm text-muted-foreground">• {hint}</p>
-                ))}
-              </div>
-            </div>
+                ))
+              )}
+            </motion.div>
           )}
         </div>
       </BuildStepLayout>
@@ -412,12 +565,12 @@ export default function BuildMode() {
             <h2 className="text-2xl font-bold mb-2 text-foreground">When must this be complete?</h2>
             <p className="text-muted-foreground">JTBDs need strategic deadlines - typically 3-5 years out.</p>
           </div>
-          
+
           <Card className="p-6 bg-primary/5 border-primary/20">
             <p className="text-sm font-semibold text-primary mb-2">💡 STRATEGIC VIEW:</p>
             <p className="text-muted-foreground">Suggested timeline: {selectedScenario.hints.when}</p>
           </Card>
-          
+
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block">Strategic deadline</label>
             <Input
@@ -427,7 +580,65 @@ export default function BuildMode() {
               data-testid="input-when"
             />
           </div>
-          
+
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (showHints) {
+                setShowHints(false);
+              } else {
+                const metricsText = buildData.metrics
+                  .map(m => `${m.name}: ${m.current} to ${m.target}`)
+                  .join('; ');
+                getSuggestions({
+                  scenarioId: selectedScenario.id,
+                  step: 'when',
+                  currentInput: `${buildData.what}. Metrics: ${metricsText}`,
+                });
+              }
+            }}
+            className="w-full"
+            disabled={suggestionsMutation.isPending}
+            data-testid="button-show-hints-when"
+          >
+            {suggestionsMutation.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Getting AI Suggestions...
+              </>
+            ) : (
+              <>
+                <Lightbulb className="w-4 h-4 mr-2" />
+                {showHints ? 'Hide' : 'Get'} AI Suggestions
+              </>
+            )}
+          </Button>
+
+          {showHints && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2">
+              <p className="text-sm font-medium text-primary mb-2">
+                {aiSuggestions.length > 0 ? '💡 AI-Generated Suggestions (click to use):' : 'Using preset hint'}
+              </p>
+              {aiSuggestions.length > 0 ? (
+                aiSuggestions.map((suggestion, i) => (
+                  <Card
+                    key={i}
+                    className="p-4 hover-elevate cursor-pointer"
+                    onClick={() => {
+                      setBuildData({ ...buildData, when: suggestion });
+                      setShowHints(false);
+                    }}
+                    data-testid={`hint-when-${i}`}
+                  >
+                    <p className="text-foreground text-sm">{suggestion}</p>
+                  </Card>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">• {selectedScenario.hints.when}</p>
+              )}
+            </motion.div>
+          )}
+
           {assembledJTBD && (
             <Card className="p-6 bg-card/50 border-card-border">
               <p className="text-sm font-semibold text-primary mb-3">PREVIEW:</p>
@@ -440,28 +651,6 @@ export default function BuildMode() {
   }
 
   if (stage === 'review') {
-    const handleGetFeedback = () => {
-      if (!assembledJTBD || !assembledJTBD.trim()) {
-        toast({
-          title: "Incomplete JTBD",
-          description: "Please complete all sections before getting feedback",
-          variant: "destructive",
-        });
-        return;
-      }
-      try {
-        localStorage.setItem('critique-prefill', assembledJTBD);
-        setLocation('/critique');
-      } catch (e) {
-        console.error('Failed to save JTBD for critique:', e);
-        toast({
-          title: "Navigation failed",
-          description: "Please try again",
-          variant: "destructive",
-        });
-      }
-    };
-
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <header className="p-4 border-b border-border">
@@ -471,21 +660,40 @@ export default function BuildMode() {
             </Button>
           </div>
         </header>
-        
+
         <div className="flex-1 overflow-auto p-6">
           <div className="max-w-3xl mx-auto space-y-8">
             <div className="text-center">
               <h2 className="text-3xl font-bold mb-2 text-foreground">Your Completed JTBD</h2>
-              <p className="text-muted-foreground">Here's your assembled statement - ready for AI feedback!</p>
+              <p className="text-muted-foreground">
+                {polishMutation.isPending
+                  ? "AI is polishing your statement into a cohesive sentence..."
+                  : "AI has polished this into a professional statement. Feel free to edit if needed."}
+              </p>
             </div>
-            
+
             <div className="space-y-4">
-              <p className="text-sm font-semibold text-primary text-center">✨ FULL STATEMENT:</p>
-              <Card className="p-8 bg-gradient-to-br from-primary/10 to-chart-3/10 border-2 border-primary/30">
-                <p className="text-xl font-semibold text-foreground leading-relaxed text-center">{assembledJTBD}</p>
-              </Card>
+              <p className="text-sm font-semibold text-primary text-center">✨ POLISHED STATEMENT:</p>
+              {polishMutation.isPending ? (
+                <Card className="p-8 bg-gradient-to-br from-primary/10 to-chart-3/10 border-2 border-primary/30">
+                  <div className="flex items-center justify-center gap-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    <p className="text-lg text-muted-foreground">Polishing your JTBD statement...</p>
+                  </div>
+                </Card>
+              ) : (
+                <div className="relative">
+                  <Textarea
+                    value={polishedStatement || assembledJTBD}
+                    onChange={(e) => setPolishedStatement(e.target.value)}
+                    rows={4}
+                    className="w-full text-lg font-semibold leading-relaxed p-6 bg-gradient-to-br from-primary/10 to-chart-3/10 border-2 border-primary/30 resize-none"
+                    data-testid="textarea-polished-statement"
+                  />
+                </div>
+              )}
             </div>
-            
+
             <div className="space-y-4">
               <p className="text-sm font-semibold text-muted-foreground text-center">Component Breakdown:</p>
               <div className="grid md:grid-cols-3 gap-4">
@@ -507,13 +715,16 @@ export default function BuildMode() {
                 </Card>
               </div>
             </div>
-            
-            <div className="flex gap-4 justify-center flex-wrap">
-              <Button variant="outline" size="lg" onClick={() => setLocation('/')} data-testid="button-return-menu">
+
+            <div className="flex justify-center">
+              <Button
+                variant="default"
+                size="lg"
+                onClick={() => setLocation('/')}
+                data-testid="button-save-exit"
+                disabled={polishMutation.isPending}
+              >
                 Save & Exit
-              </Button>
-              <Button variant="primary" size="lg" onClick={handleGetFeedback} data-testid="button-get-feedback">
-                Get AI Feedback →
               </Button>
             </div>
           </div>

@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "JTBD Mastery",
+    "slug": "jtbd-mastery",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "description": "Master the art of writing excellent Jobs-to-be-Done statements through interactive learning",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jtbd.mastery"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.jtbd.mastery"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    }
+  }
+}

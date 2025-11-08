@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { critiqueJTBD, getSuggestions } from "./ai-service";
+import { critiqueJTBD, getSuggestions, polishJTBD } from "./ai-service";
 import { critiqueRequestSchema, suggestionRequestSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -37,10 +37,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(400).json({ error: "Invalid request", details: error.errors });
       } else {
         console.error('Suggestions error:', error);
-        res.status(500).json({ 
-          error: error instanceof Error ? error.message : "Failed to generate suggestions" 
+        res.status(500).json({
+          error: error instanceof Error ? error.message : "Failed to generate suggestions"
         });
       }
+    }
+  });
+
+  // Polish endpoint - refine JTBD statement into cohesive sentence
+  app.post("/api/polish-jtbd", async (req, res) => {
+    try {
+      const { rawStatement } = req.body;
+      if (!rawStatement || typeof rawStatement !== 'string') {
+        return res.status(400).json({ error: "rawStatement is required" });
+      }
+      const polishedStatement = await polishJTBD(rawStatement);
+      res.json({ polishedStatement });
+    } catch (error) {
+      console.error('Polish error:', error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to polish JTBD"
+      });
     }
   });
 

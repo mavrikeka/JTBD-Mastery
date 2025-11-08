@@ -84,16 +84,14 @@ export const critiqueRequestSchema = z.object({
 });
 
 export const critiqueResponseSchema = z.object({
-  overallStatus: z.enum(['not-ready', 'needs-work', 'ready', 'exemplary']),
-  whatStatus: z.enum(['missing', 'weak', 'strong', 'excellent']),
-  howMuchStatus: z.enum(['missing', 'weak', 'strong', 'excellent']),
-  whenStatus: z.enum(['missing', 'weak', 'strong', 'excellent']),
+  overallScore: z.number(),
+  whatScore: z.number(),
+  howMuchScore: z.number(),
+  whenScore: z.number(),
   whatFeedback: z.string(),
   howMuchFeedback: z.string(),
   whenFeedback: z.string(),
-  whatSuggestions: z.array(z.string()),
-  howMuchSuggestions: z.array(z.string()),
-  whenSuggestions: z.array(z.string()),
+  suggestions: z.array(z.string()),
   improvedVersion: z.string().optional(),
 });
 
@@ -133,13 +131,3 @@ export const userProgressSchema = z.object({
 });
 
 export type UserProgress = z.infer<typeof userProgressSchema>;
-
-// Quiz Result (for Recent Work)
-export const quizResultSchema = z.object({
-  score: z.number(),
-  totalQuestions: z.number(),
-  answers: z.record(z.array(z.string())),
-  timestamp: z.string(),
-});
-
-export type QuizResult = z.infer<typeof quizResultSchema>;
