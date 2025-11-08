@@ -1,9 +1,18 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+
+// Enable CORS for all routes, especially for mobile app access
+app.use(cors({
+  origin: '*', // Allow requests from any origin (mobile apps, web apps, etc.)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
+}));
 
 declare module 'http' {
   interface IncomingMessage {
