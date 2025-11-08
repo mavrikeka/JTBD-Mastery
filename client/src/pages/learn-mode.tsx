@@ -411,14 +411,27 @@ export default function LearnMode() {
               );
             })}
 
-            <div className="flex justify-center pt-4">
+            <div className="flex gap-4 justify-center pt-4">
               <Button
-                variant="outline"
+                variant="default"
                 size="lg"
                 onClick={() => setLocation('/')}
                 data-testid="button-return-home"
               >
                 Return to Menu
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  // Reset quiz and go back to examples
+                  setQuizScore(0);
+                  setQuizAnswers({});
+                  setStage('examples');
+                }}
+                data-testid="button-take-quiz-again"
+              >
+                Take Quiz Again
               </Button>
             </div>
           </div>
@@ -494,6 +507,14 @@ export default function LearnMode() {
           
           <div className="flex gap-4 justify-center flex-wrap">
             <Button
+              variant="default"
+              size="lg"
+              onClick={() => setLocation('/')}
+              data-testid="button-return-menu"
+            >
+              Return to Menu
+            </Button>
+            <Button
               variant="outline"
               size="lg"
               onClick={() => setStage('review')}
@@ -504,17 +525,15 @@ export default function LearnMode() {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => setLocation('/')}
-              data-testid="button-return-menu"
+              onClick={() => {
+                // Reset quiz and go back to examples
+                setQuizScore(0);
+                setQuizAnswers({});
+                setStage('examples');
+              }}
+              data-testid="button-take-quiz-again"
             >
-              Return to Menu
-            </Button>
-            <Button
-              size="lg"
-              onClick={() => setLocation('/build')}
-              data-testid="button-start-building"
-            >
-              Start Building →
+              Take Quiz Again
             </Button>
           </div>
         </motion.div>

@@ -171,14 +171,6 @@ export default function CritiqueMode() {
     setIsViewingHistory(false);
   };
 
-  const handleEnableEditing = () => {
-    setIsViewingHistory(false);
-    toast({
-      title: "Editing enabled",
-      description: "You can now modify the statement and re-analyze",
-    });
-  };
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="p-4 border-b border-border">
@@ -233,18 +225,8 @@ export default function CritiqueMode() {
                 </p>
               </div>
 
-              <div className="flex gap-3">
-                {isViewingHistory ? (
-                  <Button
-                    variant="default"
-                    size="lg"
-                    onClick={handleEnableEditing}
-                    className="flex-1"
-                    data-testid="button-enable-editing"
-                  >
-                    Edit & Re-Critique
-                  </Button>
-                ) : (
+              {!isViewingHistory && (
+                <div className="flex gap-3">
                   <Button
                     variant="default"
                     size="lg"
@@ -265,18 +247,18 @@ export default function CritiqueMode() {
                       </>
                     )}
                   </Button>
-                )}
-                {critique && !isViewingHistory && (
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={handleReset}
-                    data-testid="button-reset"
-                  >
-                    New Analysis
-                  </Button>
-                )}
-              </div>
+                  {critique && (
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={handleReset}
+                      data-testid="button-reset"
+                    >
+                      New Analysis
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </Card>
 
@@ -416,21 +398,23 @@ export default function CritiqueMode() {
 
               <div className="flex gap-4 justify-center">
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="lg"
                   onClick={() => setLocation('/')}
                   data-testid="button-return-menu"
                 >
                   Return to Menu
                 </Button>
-                <Button
-                  variant="default"
-                  size="lg"
-                  onClick={handleReset}
-                  data-testid="button-analyze-another"
-                >
-                  Analyze Another
-                </Button>
+                {!isViewingHistory && (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={handleReset}
+                    data-testid="button-analyze-another"
+                  >
+                    Analyze Another
+                  </Button>
+                )}
               </div>
             </motion.div>
           )}

@@ -27,6 +27,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
+      "apiBaseUrl": "https://jtbd-mastery-ceoworks.replit.app",
       "eas": {
         "projectId": "your-project-id"
       }

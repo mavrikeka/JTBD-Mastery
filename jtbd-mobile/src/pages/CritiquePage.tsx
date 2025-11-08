@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Keyboard, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useMutation } from '@tanstack/react-query';
@@ -194,21 +194,7 @@ export default function CritiquePage() {
         editable={!isViewingHistory}
       />
 
-      {isViewingHistory ? (
-        <Button
-          onPress={() => {
-            setIsViewingHistory(false);
-            Alert.alert(
-              'Editing Enabled',
-              'You can now modify the statement and re-analyze'
-            );
-          }}
-          fullWidth
-          size="lg"
-        >
-          Edit & Re-Critique
-        </Button>
-      ) : (
+      {!isViewingHistory && (
         <Button
           onPress={handleCritique}
           disabled={!jtbdStatement.trim() || critiqueMutation.isPending}

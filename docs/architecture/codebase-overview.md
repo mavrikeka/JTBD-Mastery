@@ -364,8 +364,16 @@ server/index.ts (Entry Point)
 - AsyncStorage keys (same as web for consistency)
 
 **Server:**
-- Environment variables (dotenv)
+- Environment variables via `.env` file (loaded with dotenv)
+  - `AGENT_AI_API_KEY` - AI service authentication
+  - `PORT` - Server port (5001)
+  - `DATABASE_URL` - Optional database connection
 - Potential Drizzle ORM database (configured, not actively used)
+
+**Mobile App Configuration:**
+- API URL configured in `jtbd-mobile/app.json` under `extra.apiBaseUrl`
+- Accessed via `expo-constants` package in code
+- Example: `Constants.expoConfig?.extra?.apiBaseUrl`
 
 ### 6.5 API Structure
 
@@ -535,14 +543,51 @@ Scripts:
 - Dialect: PostgreSQL
 - Migrations directory: ./server/migrations
 
-### .env.example
-```
+### .env (Root directory - Server)
+**Purpose:** Backend environment variables (NOT committed to Git)
+```bash
 # Agent.ai API Configuration
-AGENT_AI_API_KEY=your_agent_ai_api_key_here
+AGENT_AI_API_KEY=your_api_key_here
+
+# Server Configuration
+PORT=5001
+
+# Database (optional)
+DATABASE_URL=your_database_url_here
 ```
 
+**Important:**
+- Used by Express server (`/server/index.ts`)
+- Loaded via `dotenv` package
+- Must be replicated in Replit Secrets for deployment
+- Never commit to Git (in `.gitignore`)
+
+### .env.example (Root directory)
+Template showing required environment variables for new developers
+
+### app.json (Mobile app)
+**Purpose:** Expo/React Native configuration including API URL
+```json
+{
+  "expo": {
+    "name": "JTBD Mastery",
+    "extra": {
+      "apiBaseUrl": "https://jtbd-mastery-ceoworks.replit.app"
+    }
+  }
+}
+```
+
+**Important:**
+- `extra.apiBaseUrl` - Backend API URL (production or local)
+- Read in code via `expo-constants`: `Constants.expoConfig?.extra?.apiBaseUrl`
+- Change this value to switch between local dev and production
+
 ### .replit
-- Deployment configuration for Replit hosting
+Deployment configuration for Replit hosting
+- Maps port 5001 to external port 80
+- Defines build and run commands
+- Sets up development workflow
 
 ---
 
@@ -677,9 +722,17 @@ npm start
 ```
 
 ### Environment Setup
+
+**Backend (Server):**
 1. Copy `.env.example` to `.env`
 2. Add your Agent.ai API key
-3. Update mobile API_BASE_URL if needed (in `queryClient.ts`)
+3. Set PORT (default: 5001)
+
+**Mobile App:**
+1. API URL is configured in `jtbd-mobile/app.json` under `extra.apiBaseUrl`
+2. For production: Use your deployed backend URL (e.g., Replit URL)
+3. For local dev: Use your local network IP (e.g., `http://192.168.x.x:5001`)
+4. The app reads this via `expo-constants` in `queryClient.ts`
 
 ---
 
@@ -743,25 +796,59 @@ if (typeof aiResponse === 'object') {
 ## 14. Deployment & Production Considerations
 
 ### Backend Deployment Options
+- **Replit** (Current deployment)
 - Render
 - Railway
 - Vercel
 - AWS Lambda + API Gateway
 
-### Required Env Variables
-- `AGENT_AI_API_KEY` - Agent.ai API key
-- `PORT` - Server port (default 5000, use 5001 for macOS)
-- `NODE_ENV` - development or production
+### Backend Environment Variables (Server)
 
-### Mobile App Deployment
-- Update `API_BASE_URL` in `queryClient.ts` to production backend
+**Required:**
+- `AGENT_AI_API_KEY` - Agent.ai API key from https://agent.ai/user/settings#credits
+- `PORT` - Server port (default 5000, use 5001 for macOS)
+
+**Optional:**
+- `NODE_ENV` - development or production
+- `DATABASE_URL` - Database connection string (if using database)
+
+**On Replit:**
+- Set these in the "Secrets" tab (🔒 icon)
+- Replit injects them as environment variables at runtime
+- Never commit `.env` file to Git
+
+### Mobile App Configuration
+
+**API URL Configuration:**
+- Configured in `jtbd-mobile/app.json` under `extra.apiBaseUrl`
+- Read at runtime via `expo-constants` package
+
+**Production (Replit):**
+```json
+// jtbd-mobile/app.json
+"extra": {
+  "apiBaseUrl": "https://jtbd-mastery-ceoworks.replit.app"
+}
+```
+
+**Local Development:**
+```json
+// jtbd-mobile/app.json
+"extra": {
+  "apiBaseUrl": "http://192.168.x.x:5001"
+}
+```
+
+**Building for Stores:**
+- Ensure `apiBaseUrl` points to production backend
 - Build: `expo build:ios` / `expo build:android`
+- Or use EAS Build: `eas build --platform ios|android`
 - Submit to App Store / Google Play
 
 ### HTTPS Configuration
-- Local dev: HTTP only
-- Production: HTTPS required
-- Update API_BASE_URL to https://production-domain.com
+- **Local dev:** HTTP only (e.g., `http://192.168.x.x:5001`)
+- **Production:** HTTPS required (e.g., `https://your-app.replit.app`)
+- Replit automatically provides HTTPS for deployed apps
 
 ---
 
@@ -833,11 +920,14 @@ Based on REFACTORING_CHECKPOINTS.md:
 | `server/scenarios.ts` | Scenario data | 6 executive scenarios with context |
 | `client/lib/storage.ts` | Web persistence | localStorage management |
 | `jtbd-mobile/src/lib/storage.ts` | Mobile persistence | AsyncStorage management |
+| `jtbd-mobile/src/lib/queryClient.ts` | Mobile API config | API_BASE_URL via expo-constants |
 | `client/pages/build-mode.tsx` | Build wizard | 7-stage JTBD creation flow |
 | `client/pages/critique-mode.tsx` | AI feedback | JTBD analysis and scoring |
 | `client/data/jtbd-examples.ts` | Learning content | 10 good/bad JTBD examples |
-| `jtbd-mobile/src/lib/queryClient.ts` | Mobile API config | API_BASE_URL and fetch setup |
-| `.env.example` | Config template | API key requirement |
+| `.env` | Server secrets | API keys, port (NOT in Git) |
+| `.env.example` | Config template | API key requirement documentation |
+| `jtbd-mobile/app.json` | Mobile config | Expo settings, apiBaseUrl for environment switching |
+| `.replit` | Replit deployment | Port mapping, build/run commands |
 
 ---
 

@@ -48,6 +48,7 @@ export default function BuildPage() {
   const [showHints, setShowHints] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [polishedStatement, setPolishedStatement] = useState('');
+  const [isViewingHistory, setIsViewingHistory] = useState(false);
 
   // Load saved JTBD from Recent Work if available
   useEffect(() => {
@@ -68,7 +69,8 @@ export default function BuildPage() {
             });
             setPolishedStatement(jtbd.assembled);
             setStage('review');
-            console.log('📖 Loaded saved JTBD from Recent Work');
+            setIsViewingHistory(true); // Mark as viewing history
+            console.log('📖 Loaded saved JTBD from Recent Work (read-only mode)');
           }
 
           // Clear after loading
@@ -890,14 +892,32 @@ export default function BuildPage() {
           <Text style={styles.componentText}>{buildData.when}</Text>
         </Card>
 
-        <Button
-          variant="default"
-          onPress={() => navigation.goBack()}
-          fullWidth
-          disabled={polishMutation.isPending}
-        >
-          Save & Exit
-        </Button>
+        <View style={{ gap: 12 }}>
+          <Button
+            variant="default"
+            onPress={() => navigation.goBack()}
+            fullWidth
+            disabled={polishMutation.isPending}
+          >
+            Return to Menu
+          </Button>
+          {!isViewingHistory && (
+            <Button
+              variant="outline"
+              onPress={() => {
+                // Reset and go back to scenarios
+                setBuildData({ scenarioId: '', what: '', metrics: [], when: '' });
+                setSelectedScenario(null);
+                setPolishedStatement('');
+                setStage('scenarios');
+              }}
+              fullWidth
+              disabled={polishMutation.isPending}
+            >
+              Build Another
+            </Button>
+          )}
+        </View>
       </ScrollView>
     );
   }

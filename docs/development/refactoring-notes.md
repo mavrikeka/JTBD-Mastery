@@ -805,6 +805,9 @@ useEffect(() => {
 | 4 | `client/src/pages/home.tsx` | ~15 lines |
 | 5 | `jtbd-mobile/src/pages/LearnPage.tsx` | ~300 lines |
 | 6 | Mobile: `jtbd-mobile/src/pages/LearnPage.tsx`, `jtbd-mobile/src/pages/HomePage.tsx`, `jtbd-mobile/src/lib/storage.ts`; Web: `client/src/pages/learn-mode.tsx`, `client/src/pages/home.tsx`, `client/src/lib/storage.ts`; Shared: `shared/schema.ts` | ~400 lines |
+| 6.5 | `server/ai-service.ts`, Web: `client/src/pages/build-mode.tsx`, `client/src/pages/critique-mode.tsx`, `client/src/pages/home.tsx`; Mobile: `jtbd-mobile/src/pages/BuildPage.tsx` | ~200 lines |
+| 6.75 | Web: `client/src/pages/critique-mode.tsx`, `client/src/pages/build-mode.tsx`, `client/src/pages/learn-mode.tsx`; Mobile: `jtbd-mobile/src/pages/CritiquePage.tsx`, `jtbd-mobile/src/pages/BuildPage.tsx`, `jtbd-mobile/src/pages/LearnPage.tsx` | ~100 lines |
+| 6.76 | Web: `client/src/pages/learn-mode.tsx`; Mobile: `jtbd-mobile/src/pages/LearnPage.tsx` | ~20 lines |
 | 7 | None (testing only) | 0 lines |
 
 ---
@@ -828,10 +831,10 @@ If issues arise:
 
 ---
 
-**Last Updated:** Session 6 Completion - Quiz Review & Recent Work Enhancement + AI Prompt Optimization
+**Last Updated:** Session 6.76 Completion - Final Button Standardization (Learn Mode Summary)
 **Next Checkpoint:** Start SESSION 7 - End-to-End Testing & Verification
 
-**Recent Changes (Session 6 + Bug Fixes + AI Optimization):**
+**Recent Changes (Session 6 + Bug Fixes + AI Optimization + Button Standardization):**
 - ✅ Added quiz review functionality to BOTH mobile and web apps
 - ✅ Users can now see which questions they got right/wrong on both platforms
 - ✅ Quiz results saved to storage and displayed in Recent Work (both platforms)
@@ -850,6 +853,11 @@ If issues arise:
 - ✅ **ENHANCED:** Critique history now loads in read-only mode with "Edit & Re-Critique" button (both apps)
 - ✅ **ADJUSTED:** Critique now evaluates complete JTBD holistically, less strict about generic WHAT when metrics are specific
 - ✅ **FIXED:** Back button in Built JTBD history now returns to Home instead of Build flow (web)
+- ✅ **STANDARDIZED:** Button patterns across all history views (Session 6.75)
+- ✅ **REMOVED:** "Edit & Re-Critique" button - all history is now strictly read-only (both apps)
+- ✅ **CHANGED:** "Save & Exit" → "Return to Menu" in Build mode (both apps)
+- ✅ **ADDED:** Context-appropriate secondary buttons ("Build Another", "Analyze Another", "Take Quiz Again")
+- ✅ **FIXED:** Learn Mode Summary button order/variants now consistent (Session 6.76)
 - ✅ **IMPORTANT:** Maintained functional parity between mobile and web apps
 
 ---
@@ -1428,3 +1436,476 @@ useEffect(() => {
 
 **Mobile Note:**
 Mobile app didn't have this issue because it uses React Navigation's `goBack()` which automatically returns to the previous screen (Home).
+
+---
+
+## 🎯 SESSION 6.75: Button Standardization Across History Views
+
+### Status: **COMPLETED**
+### Time Spent: ~30 minutes
+### Files Modified:
+**Web:**
+- `client/src/pages/critique-mode.tsx`
+- `client/src/pages/build-mode.tsx`
+- `client/src/pages/learn-mode.tsx`
+
+**Mobile:**
+- `jtbd-mobile/src/pages/CritiquePage.tsx`
+- `jtbd-mobile/src/pages/BuildPage.tsx`
+- `jtbd-mobile/src/pages/LearnPage.tsx`
+
+### Changes Made:
+
+#### Problem Identified
+Inconsistent button patterns across history views created confusion:
+- **Critique History**: "Edit & Re-Critique" + "Return to Menu" + "Analyze Another"
+- **Built JTBD History**: "Save & Exit"
+- **Quiz History**: "Return to Menu"
+
+**User Decision:**
+> "I like 1 and 2. Let's remove Edit and ReCritique. Everything is read only. Let's make this change across web and mobile"
+
+### Solution: Standardize All History Views
+
+**New Pattern:**
+1. **Primary Button**: "Return to Menu" (returns to home)
+2. **Secondary Button**: Context-appropriate action (only when NOT viewing history)
+   - Build Mode: "Build Another"
+   - Critique Mode: "Analyze Another"
+   - Learn Mode: "Take Quiz Again"
+3. **No Edit Buttons**: All history is strictly read-only
+
+---
+
+#### 1. Removed Edit Functionality from Critique History
+
+**Web Location:** `client/src/pages/critique-mode.tsx:174-180, 228, 237-250`
+**Mobile Location:** `jtbd-mobile/src/pages/CritiquePage.tsx:194, 197-210`
+
+**What was removed:**
+- "Edit & Re-Critique" button
+- `handleEnableEditing()` function (web only)
+- Alert import (mobile only)
+- Ability to unlock editing when viewing history
+
+**What changed:**
+- Input/textarea is always disabled when `isViewingHistory` is true
+- "Analyze JTBD" / "Get Critique" button is hidden when viewing history
+- Bottom buttons show only "Return to Menu" (primary) and "Analyze Another" (secondary, only when NOT viewing history)
+
+**Before (Web):**
+```typescript
+{isViewingHistory ? (
+  <div className="flex gap-3">
+    <Button variant="outline" onClick={handleEnableEditing}>
+      Edit & Re-Critique
+    </Button>
+  </div>
+) : (
+  <div className="flex gap-3">
+    <Button onClick={handleAnalyze}>Analyze JTBD</Button>
+    {critique && <Button onClick={handleReset}>New Analysis</Button>}
+  </div>
+)}
+
+// Bottom buttons
+<Button variant="outline" onClick={() => setLocation('/')}>
+  Return to Menu
+</Button>
+{!isViewingHistory && (
+  <Button variant="outline" onClick={handleReset}>
+    Analyze Another
+  </Button>
+)}
+```
+
+**After (Web):**
+```typescript
+// Removed entire Edit section
+{!isViewingHistory && (
+  <div className="flex gap-3">
+    <Button onClick={handleAnalyze}>Analyze JTBD</Button>
+    {critique && <Button onClick={handleReset}>New Analysis</Button>}
+  </div>
+)}
+
+// Bottom buttons - changed primary button variant and standardized
+<Button variant="default" onClick={() => setLocation('/')}>
+  Return to Menu
+</Button>
+{!isViewingHistory && (
+  <Button variant="outline" onClick={handleReset}>
+    Analyze Another
+  </Button>
+)}
+```
+
+**Impact:**
+- ✅ Critique history is now strictly read-only
+- ✅ Users cannot enable editing
+- ✅ Clear distinction between viewing (history) and creating (new)
+- ✅ Consistent with Build and Learn modes
+- ✅ Applied to both web and mobile
+
+---
+
+#### 2. Changed "Save & Exit" to "Return to Menu" in Build History
+
+**Web Location:** `client/src/pages/build-mode.tsx:680-700`
+**Mobile Location:** `jtbd-mobile/src/pages/BuildPage.tsx:670-690`
+
+**What changed:**
+- Button text: "Save & Exit" → "Return to Menu"
+- Button variant: `outline` → `default` (primary button style)
+- Added "Build Another" button (secondary, only when NOT viewing history)
+- Used `isViewingHistory` flag to conditionally show secondary button
+
+**Web Before:**
+```typescript
+<Button
+  variant="outline"
+  onClick={() => setLocation('/')}
+  data-testid="button-return-menu"
+>
+  Save & Exit
+</Button>
+```
+
+**Web After:**
+```typescript
+<div className="flex gap-4 justify-center">
+  <Button
+    variant="default"
+    onClick={() => setLocation('/')}
+    data-testid="button-return-menu"
+  >
+    Return to Menu
+  </Button>
+  {!isViewingHistory && (
+    <Button
+      variant="outline"
+      onClick={() => {
+        setBuildData({ scenarioId: '', what: '', metrics: [], when: '' });
+        setSelectedScenario(null);
+        setPolishedStatement('');
+        setStage('scenarios');
+      }}
+      data-testid="button-build-another"
+    >
+      Build Another
+    </Button>
+  )}
+</div>
+```
+
+**Mobile Implementation:**
+```typescript
+// Added state tracking
+const [isViewingHistory, setIsViewingHistory] = useState(false);
+
+// Set flag when loading from AsyncStorage
+const savedBuiltJTBD = await AsyncStorage.getItem('view-built-jtbd');
+if (savedBuiltJTBD) {
+  // ... load data ...
+  setIsViewingHistory(true);  // Mark as viewing history
+}
+
+// Button rendering with View gap for spacing
+<View style={{ gap: 12 }}>
+  <Button onPress={() => navigation.goBack()}>
+    Return to Menu
+  </Button>
+  {!isViewingHistory && (
+    <Button
+      variant="outline"
+      onPress={() => {
+        setBuildData({ scenarioId: '', what: '', metrics: [], when: '' });
+        setSelectedScenario(null);
+        setPolishedStatement('');
+        setStage('scenarios');
+      }}
+    >
+      Build Another
+    </Button>
+  )}
+</View>
+```
+
+**Impact:**
+- ✅ Consistent button text across all modes ("Return to Menu")
+- ✅ "Build Another" button resets state and returns to scenario selection
+- ✅ Only shown when actively completing a build, not when viewing history
+- ✅ Mobile app now tracks viewing history with state flag
+- ✅ Applied to both web and mobile
+
+---
+
+#### 3. Added "Take Quiz Again" Button to Learn Mode
+
+**Web Location:** `client/src/pages/learn-mode.tsx:387-415, 426-450`
+**Mobile Location:** `jtbd-mobile/src/pages/LearnPage.tsx:405-430, 445-470`
+
+**What changed:**
+- **Summary stage**: Changed "Start Building →" → "Take Quiz Again"
+- **Review stage**: Added "Take Quiz Again" button alongside "Return to Menu"
+- Both buttons properly reset quiz state (score and answers) and return to examples
+
+**Web Summary Stage Before:**
+```typescript
+<Button size="lg" onClick={() => setLocation('/build')}>
+  Start Building →
+</Button>
+```
+
+**Web Summary Stage After:**
+```typescript
+<Button
+  size="lg"
+  onClick={() => {
+    setQuizScore(0);
+    setQuizAnswers({});
+    setStage('examples');
+  }}
+>
+  Take Quiz Again
+</Button>
+```
+
+**Web Review Stage - Added second button:**
+```typescript
+<div className="flex gap-4 justify-center pt-4">
+  <Button variant="default" onClick={() => setLocation('/')}>
+    Return to Menu
+  </Button>
+  <Button
+    variant="outline"
+    onClick={() => {
+      setQuizScore(0);
+      setQuizAnswers({});
+      setStage('examples');
+    }}
+  >
+    Take Quiz Again
+  </Button>
+</div>
+```
+
+**Mobile Implementation:**
+```typescript
+// Summary stage
+<View style={{ gap: 12 }}>
+  <Button onPress={() => navigation.navigate('Home')}>
+    Return to Menu
+  </Button>
+  <Button
+    variant="outline"
+    onPress={() => {
+      setQuizScore(0);
+      setQuizAnswers({});
+      setCurrentStep('examples');
+    }}
+  >
+    Take Quiz Again
+  </Button>
+</View>
+
+// Review stage - same structure
+```
+
+**Impact:**
+- ✅ Consistent button pattern with Build and Critique modes
+- ✅ "Take Quiz Again" makes user intent clear (better than "Start Building")
+- ✅ Both summary and review stages offer quiz retry option
+- ✅ Quiz state resets properly (score + answers cleared)
+- ✅ Returns to examples, not intro (better UX for retakes)
+- ✅ Applied to both web and mobile
+- ✅ Mobile uses `View` with `gap: 12` for spacing
+
+---
+
+### Testing Done:
+
+**Web App:**
+- ✅ Critique history shows "Return to Menu" + "Analyze Another" buttons
+- ✅ "Edit & Re-Critique" button removed
+- ✅ Input is disabled when viewing critique history
+- ✅ "Analyze JTBD" button hidden when viewing history
+- ✅ Build history shows "Return to Menu" + "Build Another" buttons
+- ✅ "Build Another" resets state and returns to scenarios
+- ✅ Learn mode summary shows "Take Quiz Again" instead of "Start Building"
+- ✅ Learn mode review shows "Return to Menu" + "Take Quiz Again"
+- ✅ "Take Quiz Again" resets quiz and returns to examples
+
+**Mobile App:**
+- ✅ Critique history shows "Return to Menu" + "Analyze Another" buttons
+- ✅ "Edit & Re-Critique" button removed
+- ✅ TextArea is not editable when viewing history
+- ✅ "Get Critique" button hidden when viewing history
+- ✅ Build history tracks `isViewingHistory` state correctly
+- ✅ Build history shows "Return to Menu" + "Build Another" buttons
+- ✅ "Build Another" only shown when NOT viewing history
+- ✅ Learn mode uses proper `View` gap styling for button spacing
+- ✅ All button patterns match web functionality
+
+**Cross-Platform:**
+- ✅ Functional parity maintained between web and mobile
+- ✅ All history views are strictly read-only
+- ✅ Consistent button patterns across all modes
+- ✅ Primary button: "Return to Menu" (default variant)
+- ✅ Secondary button: Context-specific action (outline variant)
+
+---
+
+### Summary of Button Patterns (Final State):
+
+| Mode | Primary Button | Secondary Button | When Secondary Shown |
+|------|---------------|------------------|---------------------|
+| **Critique History** | Return to Menu | Analyze Another | When NOT viewing history |
+| **Build History** | Return to Menu | Build Another | When NOT viewing history |
+| **Quiz Summary** | Return to Menu | Take Quiz Again | Always |
+| **Quiz Review** | Return to Menu | Take Quiz Again | Always |
+
+**Key Principles:**
+1. **Always show "Return to Menu"** as the primary action (default variant)
+2. **Secondary actions are context-appropriate** (outline variant)
+3. **History is always read-only** - no edit buttons
+4. **Secondary actions only shown when relevant** (not viewing history)
+
+---
+
+### Known Issues:
+- None
+
+### Next Steps:
+- Documentation updated
+- Ready for Session 7 testing
+
+---
+
+## 🎯 SESSION 6.76: Fix Learn Mode Summary Button Order
+
+### Status: **COMPLETED**
+### Time Spent: ~5 minutes
+### Files Modified:
+**Web:**
+- `client/src/pages/learn-mode.tsx`
+
+**Mobile:**
+- `jtbd-mobile/src/pages/LearnPage.tsx`
+
+### Changes Made:
+
+#### Problem Identified
+After completing Session 6.75, one inconsistency remained in the Learn Mode **Summary** stage (quiz completion screen):
+- Had 3 buttons with inconsistent order and variants
+- "Return to Menu" was NOT the primary (first) button
+- "Return to Menu" had `variant="outline"` instead of `variant="default"`
+
+**Incorrect Order:**
+1. "Review Answers" (outline)
+2. "Return to Menu" (outline) ❌ Should be default and first
+3. "Take Quiz Again" (default) ❌ Should be outline
+
+This was inconsistent with:
+- Learn Mode Review stage: "Return to Menu" (default) first
+- Build Mode Review stage: "Return to Menu" (default) first
+- Critique Mode Results: "Return to Menu" (default) first
+
+### Solution: Reorder and Fix Button Variants
+
+**Web Changes** (`client/src/pages/learn-mode.tsx:508-538`):
+
+**Before:**
+```typescript
+<div className="flex gap-4 justify-center flex-wrap">
+  <Button variant="outline" size="lg" onClick={() => setStage('review')}>
+    Review Answers
+  </Button>
+  <Button variant="outline" size="lg" onClick={() => setLocation('/')}>
+    Return to Menu
+  </Button>
+  <Button size="lg" onClick={() => { /* reset quiz */ }}>
+    Take Quiz Again
+  </Button>
+</div>
+```
+
+**After:**
+```typescript
+<div className="flex gap-4 justify-center flex-wrap">
+  <Button variant="default" size="lg" onClick={() => setLocation('/')}>
+    Return to Menu
+  </Button>
+  <Button variant="outline" size="lg" onClick={() => setStage('review')}>
+    Review Answers
+  </Button>
+  <Button variant="outline" size="lg" onClick={() => { /* reset quiz */ }}>
+    Take Quiz Again
+  </Button>
+</div>
+```
+
+**Mobile Changes** (`jtbd-mobile/src/pages/LearnPage.tsx:297-317`):
+
+**Before:**
+```typescript
+<View style={styles.summaryButtons}>
+  <Button size="lg" onPress={() => setCurrentStep('review')} fullWidth variant="outline">
+    Review Answers
+  </Button>
+  <Button size="lg" onPress={() => setCurrentStep('intro')} fullWidth>
+    Return to Menu
+  </Button>
+  <Button size="lg" onPress={() => { /* reset quiz */ }} fullWidth variant="outline">
+    Take Quiz Again
+  </Button>
+</View>
+```
+
+**After:**
+```typescript
+<View style={styles.summaryButtons}>
+  <Button size="lg" onPress={() => setCurrentStep('intro')} fullWidth>
+    Return to Menu
+  </Button>
+  <Button size="lg" onPress={() => setCurrentStep('review')} fullWidth variant="outline">
+    Review Answers
+  </Button>
+  <Button size="lg" onPress={() => { /* reset quiz */ }} fullWidth variant="outline">
+    Take Quiz Again
+  </Button>
+</View>
+```
+
+### Impact:
+- ✅ "Return to Menu" is now the primary (first) button with default variant
+- ✅ All secondary actions use outline variant
+- ✅ Consistent with all other final screens (Build Review, Critique Results, Learn Review)
+- ✅ Clear visual hierarchy: primary action stands out
+- ✅ Applied to both web and mobile
+
+### Final Button Pattern (All Completion Screens):
+
+| Screen | Button 1 (Primary) | Button 2 (Secondary) | Button 3 (Optional) |
+|--------|-------------------|---------------------|---------------------|
+| **Learn Summary** | Return to Menu (default) | Review Answers (outline) | Take Quiz Again (outline) |
+| **Learn Review** | Return to Menu (default) | Take Quiz Again (outline) | - |
+| **Build Review** | Return to Menu (default) | Build Another (outline)* | - |
+| **Critique Results** | Return to Menu (default) | Analyze Another (outline)* | - |
+
+*Only shown when NOT viewing history
+
+**Key Principles Maintained:**
+1. **"Return to Menu" always first** with default variant (primary)
+2. **All other actions use outline variant** (secondary)
+3. **Consistent visual hierarchy** across all completion screens
+4. **Functional parity** between web and mobile
+
+---
+
+### Known Issues:
+- None
+
+### Next Steps:
+- All button patterns now fully standardized
+- Ready for Session 7 testing

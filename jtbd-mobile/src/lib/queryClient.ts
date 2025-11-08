@@ -1,10 +1,13 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import Constants from "expo-constants";
 
 // API Base URL for connecting to backend server
-// Using local network IP address so mobile device can connect to dev server
-// If your IP changes, update this value (run: ifconfig | grep "inet " on macOS/Linux)
-// Port 5001 is used because 5000 is taken by macOS Control Center
-export const API_BASE_URL = 'http://192.168.68.111:5001';
+// Configured in app.json under "extra.apiBaseUrl"
+// For local development, you can override this in app.json to use your local IP:
+// "apiBaseUrl": "http://192.168.68.111:5001"
+export const API_BASE_URL =
+  Constants.expoConfig?.extra?.apiBaseUrl ||
+  'https://jtbd-mastery-ceoworks.replit.app';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

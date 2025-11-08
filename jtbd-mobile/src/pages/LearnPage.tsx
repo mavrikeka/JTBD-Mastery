@@ -295,11 +295,24 @@ export default function LearnPage() {
         </Card>
 
         <View style={styles.summaryButtons}>
+          <Button size="lg" onPress={() => setCurrentStep('intro')} fullWidth>
+            Return to Menu
+          </Button>
           <Button size="lg" onPress={() => setCurrentStep('review')} fullWidth variant="outline">
             Review Answers
           </Button>
-          <Button size="lg" onPress={() => setCurrentStep('intro')} fullWidth>
-            Return to Menu
+          <Button
+            size="lg"
+            onPress={() => {
+              // Reset quiz and go back to examples
+              setQuizScore(0);
+              setQuizAnswers({});
+              setCurrentStep('examples');
+            }}
+            fullWidth
+            variant="outline"
+          >
+            Take Quiz Again
           </Button>
         </View>
       </ScrollView>
@@ -391,9 +404,24 @@ export default function LearnPage() {
           );
         })}
 
-        <Button size="lg" onPress={() => setCurrentStep('intro')} fullWidth>
-          Return to Menu
-        </Button>
+        <View style={{ gap: 12 }}>
+          <Button size="lg" onPress={() => setCurrentStep('intro')} fullWidth>
+            Return to Menu
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onPress={() => {
+              // Reset quiz and go back to examples
+              setQuizScore(0);
+              setQuizAnswers({});
+              setCurrentStep('examples');
+            }}
+            fullWidth
+          >
+            Take Quiz Again
+          </Button>
+        </View>
       </ScrollView>
     );
   }

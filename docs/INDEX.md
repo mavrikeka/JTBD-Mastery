@@ -29,6 +29,7 @@ Technical documentation about system design and implementation.
 Guides and references for active development.
 
 - **[Quick Reference](development/quick-reference.md)** - Developer quick start and common tasks
+- **[Deployment Guide](development/deployment-guide.md)** - Production deployment instructions (Replit, mobile apps)
 - **[Design Guidelines](development/design-guidelines.md)** - UI/UX design principles and patterns
 - **[Refactoring Notes](development/refactoring-notes.md)** - Historical refactoring checkpoints and decisions
 
@@ -58,6 +59,7 @@ Located in `jtbd-mobile/docs/`:
 | README.md | First-time setup, overview | Getting Started |
 | architecture/codebase-overview.md | Understanding system design | Reference |
 | development/quick-reference.md | Daily development tasks | Quick Guide |
+| development/deployment-guide.md | Deploying to production | Guide |
 | development/design-guidelines.md | UI/UX decisions | Standards |
 | development/refactoring-notes.md | Understanding code history | Historical |
 | proposals/* | Context on design decisions | Historical |

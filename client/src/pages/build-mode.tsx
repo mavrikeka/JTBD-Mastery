@@ -743,16 +743,33 @@ export default function BuildMode() {
               </div>
             </div>
 
-            <div className="flex justify-center">
+            <div className="flex gap-4 justify-center">
               <Button
                 variant="default"
                 size="lg"
                 onClick={() => setLocation('/')}
-                data-testid="button-save-exit"
+                data-testid="button-return-menu"
                 disabled={polishMutation.isPending}
               >
-                Save & Exit
+                Return to Menu
               </Button>
+              {!isViewingHistory && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => {
+                    // Reset and go back to scenarios
+                    setBuildData({ scenarioId: '', what: '', metrics: [], when: '' });
+                    setSelectedScenario(null);
+                    setPolishedStatement('');
+                    setStage('scenarios');
+                  }}
+                  data-testid="button-build-another"
+                  disabled={polishMutation.isPending}
+                >
+                  Build Another
+                </Button>
+              )}
             </div>
           </div>
         </div>
