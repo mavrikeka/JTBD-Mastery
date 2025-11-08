@@ -49,6 +49,12 @@ export default function BuildMode() {
     };
   }, []);
 
+  // Reset AI suggestions state when stage changes
+  useEffect(() => {
+    setShowHints(false);
+    setAiSuggestions([]);
+  }, [stage]);
+
   // Helper function to get suggestions with caching
   const getSuggestions = (request: SuggestionRequest) => {
     const cacheKey = JSON.stringify(request);

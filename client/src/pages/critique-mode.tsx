@@ -5,12 +5,58 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Search, Loader2, Check, X, AlertCircle } from "lucide-react";
-import { ScoreRing } from "@/components/score-ring";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ArrowLeft, Search, Loader2, Check, ChevronDown } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { CritiqueRequest, CritiqueResponse } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { updateCritiqueProgress } from "@/lib/storage";
+
+// Helper functions for status display
+function getStatusIcon(status: 'missing' | 'weak' | 'strong' | 'excellent'): string {
+  switch (status) {
+    case 'missing': return '❌';
+    case 'weak': return '⚠️';
+    case 'strong': return '✅';
+    case 'excellent': return '🌟';
+  }
+}
+
+function getStatusText(status: 'missing' | 'weak' | 'strong' | 'excellent'): string {
+  switch (status) {
+    case 'missing': return 'Missing';
+    case 'weak': return 'Weak';
+    case 'strong': return 'Strong';
+    case 'excellent': return 'Excellent';
+  }
+}
+
+function getOverallStatusText(status: 'not-ready' | 'needs-work' | 'ready' | 'exemplary'): string {
+  switch (status) {
+    case 'not-ready': return '❌ Not Ready';
+    case 'needs-work': return '⚠️ Needs Work';
+    case 'ready': return '✅ Ready to Execute';
+    case 'exemplary': return '🌟 Exemplary';
+  }
+}
+
+function getComponentStatusColor(status: 'missing' | 'weak' | 'strong' | 'excellent'): string {
+  switch (status) {
+    case 'missing': return 'bg-destructive/20 text-destructive border-destructive/40';
+    case 'weak': return 'bg-chart-4/20 text-chart-4 border-chart-4/40';
+    case 'strong': return 'bg-chart-3/20 text-chart-3 border-chart-3/40';
+    case 'excellent': return 'bg-purple-500/20 text-purple-600 border-purple-500/40';
+  }
+}
+
+function getOverallStatusColor(status: 'not-ready' | 'needs-work' | 'ready' | 'exemplary'): string {
+  switch (status) {
+    case 'not-ready': return 'bg-destructive/20 text-destructive border-destructive/40';
+    case 'needs-work': return 'bg-chart-4/20 text-chart-4 border-chart-4/40';
+    case 'ready': return 'bg-chart-3/20 text-chart-3 border-chart-3/40';
+    case 'exemplary': return 'bg-purple-500/20 text-purple-600 border-purple-500/40';
+  }
+}
 
 export default function CritiqueMode() {
   const [, setLocation] = useLocation();
@@ -18,6 +64,9 @@ export default function CritiqueMode() {
   const [jtbdInput, setJtbdInput] = useState("");
   const [critique, setCritique] = useState<CritiqueResponse | null>(null);
   const analyzedStatementRef = useRef<string>("");
+  const [expandedWhat, setExpandedWhat] = useState(false);
+  const [expandedHowMuch, setExpandedHowMuch] = useState(false);
+  const [expandedWhen, setExpandedWhen] = useState(false);
 
   // Cache for critique results
   const critiqueCache = useRef(new Map<string, CritiqueResponse>());
@@ -40,8 +89,8 @@ export default function CritiqueMode() {
     },
     onSuccess: ({ data, statement }) => {
       console.log('✅ Critique data received:', data);
-      console.log('Overall score:', data.overallScore);
-      console.log('Component scores:', data.whatScore, data.howMuchScore, data.whenScore);
+      console.log('Overall status:', data.overallStatus);
+      console.log('Component statuses:', data.whatStatus, data.howMuchStatus, data.whenStatus);
 
       // Cache the result
       const cacheKey = statement.trim();
@@ -195,68 +244,135 @@ export default function CritiqueMode() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-8"
+              className="space-y-6"
             >
-              <div className="text-center">
-                <h2 className="text-3xl font-bold mb-6 text-foreground">Analysis Results</h2>
-                <div className="flex justify-center mb-8">
-                  <ScoreRing
-                    score={critique.overallScore}
-                    size={160}
-                    strokeWidth={12}
-                    label="Overall Score"
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-6">
-                <ComponentScoreCard
-                  title="WHAT"
-                  score={critique.whatScore}
-                  feedback={critique.whatFeedback}
-                />
-                <ComponentScoreCard
-                  title="HOW MUCH"
-                  score={critique.howMuchScore}
-                  feedback={critique.howMuchFeedback}
-                />
-                <ComponentScoreCard
-                  title="WHEN"
-                  score={critique.whenScore}
-                  feedback={critique.whenFeedback}
-                />
-              </div>
-
-              {critique.suggestions && critique.suggestions.length > 0 && (
-                <Card className="p-8 bg-primary/5 border-primary/20">
-                  <h3 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2">
-                    <AlertCircle className="w-6 h-6 text-primary" />
-                    Suggestions for Improvement
-                  </h3>
-                  <ul className="space-y-3">
-                    {critique.suggestions.map((suggestion, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <span className="text-xs font-bold text-primary">{index + 1}</span>
-                        </div>
-                        <p className="text-foreground">{suggestion}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </Card>
-              )}
-
-              {critique.improvedVersion && (
-                <Card className="p-8 bg-gradient-to-br from-chart-3/5 to-primary/5 border-chart-3/20">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Check className="w-6 h-6 text-chart-3" />
-                    <h3 className="text-xl font-bold text-foreground">Improved Version</h3>
+              <Card className="p-8">
+                {/* Overall Status */}
+                <div className="text-center mb-8">
+                  <h3 className="text-lg font-semibold text-foreground mb-3">Overall Status</h3>
+                  <div className={`inline-block px-6 py-3 rounded-full border-2 ${getOverallStatusColor(critique.overallStatus)}`}>
+                    <span className="text-lg font-bold">{getOverallStatusText(critique.overallStatus)}</span>
                   </div>
-                  <p className="text-lg text-foreground leading-relaxed">
-                    {critique.improvedVersion}
-                  </p>
-                </Card>
-              )}
+                </div>
+
+                <div className="border-t border-border my-6"></div>
+
+                {/* Component Statuses */}
+                <div className="space-y-4">
+                  {/* WHAT Component */}
+                  <Collapsible open={expandedWhat} onOpenChange={setExpandedWhat}>
+                    <div className="border border-border rounded-lg">
+                      <CollapsibleTrigger className="w-full p-4 hover:bg-accent/50 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-foreground">WHAT</span>
+                            <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getComponentStatusColor(critique.whatStatus)}`}>
+                              {getStatusIcon(critique.whatStatus)} {getStatusText(critique.whatStatus)}
+                            </span>
+                          </div>
+                          <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${expandedWhat ? 'rotate-180' : ''}`} />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="p-4 border-t border-border bg-accent/20">
+                          <p className="text-sm font-semibold text-foreground mb-2">Feedback:</p>
+                          <p className="text-sm text-muted-foreground mb-4">{critique.whatFeedback}</p>
+                          {critique.whatSuggestions && critique.whatSuggestions.length > 0 && (
+                            <>
+                              <p className="text-sm font-semibold text-foreground mb-2">Suggestions:</p>
+                              <ul className="space-y-1">
+                                {critique.whatSuggestions.map((suggestion, index) => (
+                                  <li key={index} className="text-sm text-muted-foreground">• {suggestion}</li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+                        </div>
+                      </CollapsibleContent>
+                    </div>
+                  </Collapsible>
+
+                  {/* HOW MUCH Component */}
+                  <Collapsible open={expandedHowMuch} onOpenChange={setExpandedHowMuch}>
+                    <div className="border border-border rounded-lg">
+                      <CollapsibleTrigger className="w-full p-4 hover:bg-accent/50 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-foreground">HOW MUCH</span>
+                            <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getComponentStatusColor(critique.howMuchStatus)}`}>
+                              {getStatusIcon(critique.howMuchStatus)} {getStatusText(critique.howMuchStatus)}
+                            </span>
+                          </div>
+                          <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${expandedHowMuch ? 'rotate-180' : ''}`} />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="p-4 border-t border-border bg-accent/20">
+                          <p className="text-sm font-semibold text-foreground mb-2">Feedback:</p>
+                          <p className="text-sm text-muted-foreground mb-4">{critique.howMuchFeedback}</p>
+                          {critique.howMuchSuggestions && critique.howMuchSuggestions.length > 0 && (
+                            <>
+                              <p className="text-sm font-semibold text-foreground mb-2">Suggestions:</p>
+                              <ul className="space-y-1">
+                                {critique.howMuchSuggestions.map((suggestion, index) => (
+                                  <li key={index} className="text-sm text-muted-foreground">• {suggestion}</li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+                        </div>
+                      </CollapsibleContent>
+                    </div>
+                  </Collapsible>
+
+                  {/* WHEN Component */}
+                  <Collapsible open={expandedWhen} onOpenChange={setExpandedWhen}>
+                    <div className="border border-border rounded-lg">
+                      <CollapsibleTrigger className="w-full p-4 hover:bg-accent/50 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="font-bold text-foreground">WHEN</span>
+                            <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getComponentStatusColor(critique.whenStatus)}`}>
+                              {getStatusIcon(critique.whenStatus)} {getStatusText(critique.whenStatus)}
+                            </span>
+                          </div>
+                          <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${expandedWhen ? 'rotate-180' : ''}`} />
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="p-4 border-t border-border bg-accent/20">
+                          <p className="text-sm font-semibold text-foreground mb-2">Feedback:</p>
+                          <p className="text-sm text-muted-foreground mb-4">{critique.whenFeedback}</p>
+                          {critique.whenSuggestions && critique.whenSuggestions.length > 0 && (
+                            <>
+                              <p className="text-sm font-semibold text-foreground mb-2">Suggestions:</p>
+                              <ul className="space-y-1">
+                                {critique.whenSuggestions.map((suggestion, index) => (
+                                  <li key={index} className="text-sm text-muted-foreground">• {suggestion}</li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+                        </div>
+                      </CollapsibleContent>
+                    </div>
+                  </Collapsible>
+                </div>
+
+                {/* Improved Version */}
+                {critique.improvedVersion && (
+                  <>
+                    <div className="border-t border-border my-6"></div>
+                    <div className="bg-chart-3/10 border-l-4 border-chart-3 p-4 rounded">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Check className="w-5 h-5 text-chart-3" />
+                        <h3 className="text-lg font-bold text-foreground">✨ Improved Version:</h3>
+                      </div>
+                      <p className="text-foreground leading-relaxed">{critique.improvedVersion}</p>
+                    </div>
+                  </>
+                )}
+              </Card>
 
               <div className="flex gap-4 justify-center">
                 <Button
@@ -281,53 +397,5 @@ export default function CritiqueMode() {
         </div>
       </div>
     </div>
-  );
-}
-
-function ComponentScoreCard({
-  title,
-  score,
-  feedback,
-}: {
-  title: string;
-  score: number;
-  feedback: string;
-}) {
-  const getIcon = (score: number) => {
-    if (score >= 80) return <Check className="w-6 h-6 text-chart-3" />;
-    if (score >= 60) return <AlertCircle className="w-6 h-6 text-chart-4" />;
-    return <X className="w-6 h-6 text-destructive" />;
-  };
-
-  const getColor = (score: number) => {
-    if (score >= 80) return "border-chart-3/30 bg-chart-3/5";
-    if (score >= 60) return "border-chart-4/30 bg-chart-4/5";
-    return "border-destructive/30 bg-destructive/5";
-  };
-
-  return (
-    <Card className={`p-6 ${getColor(score)}`}>
-      <div className="flex items-start justify-between mb-4">
-        <h3 className="text-lg font-bold text-foreground">{title}</h3>
-        {getIcon(score)}
-      </div>
-      <div className="mb-4">
-        <div className="flex justify-between items-baseline mb-2">
-          <span className="text-3xl font-bold text-foreground">{score}</span>
-          <span className="text-sm text-muted-foreground">/100</span>
-        </div>
-        <div className="h-2 bg-secondary rounded-full overflow-hidden">
-          <motion.div
-            className={`h-full rounded-full ${
-              score >= 80 ? 'bg-chart-3' : score >= 60 ? 'bg-chart-4' : 'bg-destructive'
-            }`}
-            initial={{ width: 0 }}
-            animate={{ width: `${score}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          />
-        </div>
-      </div>
-      <p className="text-sm text-muted-foreground leading-relaxed">{feedback}</p>
-    </Card>
   );
 }

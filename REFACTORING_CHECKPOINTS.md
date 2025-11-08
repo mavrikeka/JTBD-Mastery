@@ -501,6 +501,87 @@ const handleQuizAnswer = (optionId: string) => {
 )}
 ```
 
+#### 6. Fixed Web App AI Suggestions State Persistence
+**Web Location:** `client/src/pages/build-mode.tsx`
+**Mobile App:** Not affected - does not have this issue
+
+**Issue Found:**
+- In web app Build mode, when user clicks "Get AI Suggestions" on the "What" step
+- The `showHints` state persists when moving to the next step ("How much")
+- Button incorrectly shows "Hide AI Suggestions" instead of "Get AI Suggestions"
+- Confusing UX as user hasn't requested suggestions on the new step
+
+**Fix Applied:**
+- Added useEffect hook that resets AI suggestions state whenever stage changes
+- Resets both `showHints` (boolean) and `aiSuggestions` (array) to initial state
+- Ensures each build step starts with a clean slate for AI suggestions
+
+**Code Pattern:**
+```typescript
+// Reset AI suggestions state when stage changes
+useEffect(() => {
+  setShowHints(false);
+  setAiSuggestions([]);
+}, [stage]);
+```
+
+**Note:** Mobile app was checked and does not have this issue.
+
+#### 7. Fixed Web App Critique Mode Schema Mismatch
+**Web Location:** `client/src/pages/critique-mode.tsx`
+**Mobile App:** Already using correct schema (was fixed previously)
+
+**Issue Found:**
+- Web app Critique mode was displaying numeric scores (0-100) with score rings
+- API schema returns status enums: 'missing', 'weak', 'strong', 'excellent'
+- Web app was trying to access non-existent fields: `overallScore`, `whatScore`, `howMuchScore`, `whenScore`
+- Mobile app was correctly using status-based display with badges
+- Complete mismatch between web UI and actual API response
+
+**Fix Applied:**
+- Completely refactored web critique output to match mobile implementation
+- Added helper functions for status display (getStatusIcon, getStatusText, getComponentStatusColor, getOverallStatusColor)
+- Replaced score rings with status badges showing text labels (Missing, Weak, Strong, Excellent)
+- Added collapsible sections for each component (WHAT, HOW MUCH, WHEN)
+- Each section shows:
+  - Component name and status badge
+  - Expandable feedback
+  - Component-specific suggestions array
+- Overall status shows badges (❌ Not Ready, ⚠️ Needs Work, ✅ Ready to Execute, 🌟 Exemplary)
+- Removed unused ComponentScoreCard component
+- Updated console logs to use correct schema fields
+
+**Before:**
+```typescript
+// Old web app (WRONG)
+<ScoreRing score={critique.overallScore} /> // doesn't exist!
+<ComponentScoreCard score={critique.whatScore} /> // doesn't exist!
+```
+
+**After:**
+```typescript
+// New web app (CORRECT)
+<div className={getOverallStatusColor(critique.overallStatus)}>
+  {getOverallStatusText(critique.overallStatus)}
+</div>
+
+<Collapsible>
+  <span className={getComponentStatusColor(critique.whatStatus)}>
+    {getStatusIcon(critique.whatStatus)} {getStatusText(critique.whatStatus)}
+  </span>
+  <CollapsibleContent>
+    {critique.whatFeedback}
+    {critique.whatSuggestions.map(...)}
+  </CollapsibleContent>
+</Collapsible>
+```
+
+**Result:**
+- Web app now matches mobile app functionality
+- Both apps use the same schema correctly
+- Collapsible component sections for better UX
+- Status-based feedback instead of arbitrary numeric scores
+
 ### Testing Done (Both Mobile & Web):
 - ✅ Quiz review shows all questions with correct answers highlighted
 - ✅ User's incorrect answers are marked with "(Your answer)"
@@ -512,7 +593,12 @@ const handleQuizAnswer = (optionId: string) => {
 - ✅ Multi-select questions show "Submit Answer" button (NEW)
 - ✅ Multi-select allows selecting multiple options before submitting (NEW)
 - ✅ Single-select questions auto-submit on selection (existing behavior)
-- ✅ Both mobile and web apps have identical functionality
+- ✅ Web app AI suggestions reset when moving between build steps (NEW)
+- ✅ "Get AI Suggestions" button shows correct text on each step (NEW)
+- ✅ Web app Critique mode shows status badges not numeric scores (NEW)
+- ✅ Critique components are collapsible with feedback and suggestions (NEW)
+- ✅ Both mobile and web apps use the same API schema correctly (NEW)
+- ✅ Both mobile and web apps have identical functional behavior
 
 ### Known Issues:
 - None
@@ -713,11 +799,13 @@ If issues arise:
 **Last Updated:** Session 6 Completion - Quiz Review & Recent Work Enhancement
 **Next Checkpoint:** Start SESSION 7 - End-to-End Testing & Verification
 
-**Recent Changes (Session 6 + Multi-Select Fix):**
+**Recent Changes (Session 6 + Bug Fixes):**
 - ✅ Added quiz review functionality to BOTH mobile and web apps
 - ✅ Users can now see which questions they got right/wrong on both platforms
 - ✅ Quiz results saved to storage and displayed in Recent Work (both platforms)
 - ✅ Color-coded score indicators (green ≥80%, yellow 60-79%, red <60%)
 - ✅ Clicking/tapping quiz result from home navigates to review page
-- ✅ **FIXED:** Multi-select quiz questions now show "Submit Answer" button (was auto-submitting)
+- ✅ **FIXED:** Multi-select quiz questions now show "Submit Answer" button (both apps)
+- ✅ **FIXED:** Web app AI suggestions state no longer persists across build steps
+- ✅ **FIXED:** Web app Critique mode now uses correct schema (status-based not score-based)
 - ✅ **IMPORTANT:** Maintained functional parity between mobile and web apps
