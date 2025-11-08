@@ -70,6 +70,11 @@ export async function critiqueJTBD(request: CritiqueRequest): Promise<CritiqueRe
 
 The "Glass Slipper" Test: "If you can Google it, it's NOT a JTBD." JTBDs must be so bespoke and specific that they exclude 95% of candidates.
 
+IMPORTANT: Apply the Glass Slipper Test to the COMPLETE JTBD, not just the WHAT in isolation.
+- A WHAT like "Consolidate supplier contracts" may seem generic alone, BUT when combined with specific metrics (150→100 suppliers, COGS 72%→68.4%) and timeline, it becomes bespoke to the organization.
+- The specificity comes from the COMBINATION of all three components, not just the WHAT alone.
+- WHAT can be relatively straightforward as long as HOW MUCH provides the specific, measurable context that makes it unique.
+
 Analyze the following JTBD statement and provide a detailed critique:
 
 "${request.jtbdStatement}"
@@ -78,18 +83,19 @@ STATUS DEFINITIONS:
 Component Status (whatStatus, howMuchStatus, whenStatus):
 - "missing": Component not present or completely inadequate
 - "weak": Component present but vague, generic, or needs significant improvement
-- "strong": Component well-defined, specific, and actionable
-- "excellent": Component exceptional, passes Glass Slipper test
+- "strong": Component well-defined, specific, and actionable (consider the WHAT strong if it's clear and concrete, even if not hyper-detailed, as long as metrics provide specificity)
+- "excellent": Component exceptional, passes Glass Slipper test on its own
 
 Overall Status:
 - "not-ready": Missing one or more components (cannot execute)
 - "needs-work": All components present but at least one is weak
-- "ready": All components strong (ready to execute)
+- "ready": All components strong (ready to execute) - remember to consider the COMPLETE statement
 - "exemplary": All components excellent (best-in-class JTBD)
 
 For each component, provide:
 - Detailed feedback explaining the status
 - 2-3 specific, actionable suggestions for improvement (even for excellent components)
+- For WHAT: Acknowledge if the metrics make up for any generic language in the work description
 
 Respond in this exact JSON format (no extra text, just the JSON):
 {

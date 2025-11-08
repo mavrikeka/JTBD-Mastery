@@ -848,6 +848,8 @@ If issues arise:
 - ✅ **FIXED:** Critique toast messages now show status instead of non-existent score (web)
 - ✅ **FIXED:** Web app now loads and displays critique data when viewing from Recent Work
 - ✅ **ENHANCED:** Critique history now loads in read-only mode with "Edit & Re-Critique" button (both apps)
+- ✅ **ADJUSTED:** Critique now evaluates complete JTBD holistically, less strict about generic WHAT when metrics are specific
+- ✅ **FIXED:** Back button in Built JTBD history now returns to Home instead of Build flow (web)
 - ✅ **IMPORTANT:** Maintained functional parity between mobile and web apps
 
 ---
@@ -1300,3 +1302,129 @@ const handleEnableEditing = () => {
    - Input becomes editable
    - Button changes to "Analyze JTBD" / "Get Critique"
    - User can modify and re-analyze
+
+---
+
+#### Prompt Adjustment: Make Critique Less Strict About Generic WHAT
+**Location:** `server/ai-service.ts:64-98`
+
+**Problem:**
+Build Mode and Critique Mode were misaligned:
+- **Build Mode** encourages concise WHAT statements (4-7 words): "Consolidate supplier contracts"
+- **Critique Mode** applies "Glass Slipper Test" strictly to WHAT alone, criticizing "consolidate supplier contracts" as too generic
+- Result: Build Mode creates statements that Critique Mode then criticizes!
+
+**User Feedback:**
+A JTBD built through the system:
+> "Consolidate supplier contracts from 150 to 100 while reducing COGS from 72% to 68.4% by Q2 2027"
+
+Was criticized for having a generic WHAT, even though the complete statement is very specific (150→100, 72%→68.4% are bespoke metrics).
+
+**Root Cause:**
+The critique prompt applied the "Glass Slipper Test" to each component in isolation rather than to the complete JTBD statement.
+
+**Solution:**
+Updated critique prompt to evaluate specificity holistically - the WHAT can be straightforward if the HOW MUCH metrics provide the bespoke context.
+
+**Key Changes:**
+
+1. **Added important clarification**:
+```
+IMPORTANT: Apply the Glass Slipper Test to the COMPLETE JTBD, not just the WHAT in isolation.
+- A WHAT like "Consolidate supplier contracts" may seem generic alone, BUT when combined with
+  specific metrics (150→100 suppliers, COGS 72%→68.4%) and timeline, it becomes bespoke.
+- The specificity comes from the COMBINATION of all three components, not just the WHAT alone.
+- WHAT can be relatively straightforward as long as HOW MUCH provides the specific, measurable context.
+```
+
+2. **Updated WHAT status definition**:
+```
+- "strong": Component well-defined, specific, and actionable (consider the WHAT strong if it's
+  clear and concrete, even if not hyper-detailed, as long as metrics provide specificity)
+```
+
+3. **Added guidance for feedback**:
+```
+For each component, provide:
+- For WHAT: Acknowledge if the metrics make up for any generic language in the work description
+```
+
+**Impact:**
+- ✅ Critique now evaluates the complete JTBD, not components in isolation
+- ✅ "Consolidate supplier contracts from 150 to 100, reducing COGS from 72% to 68.4% by Q2 2027" should now get "strong" or "excellent" ratings
+- ✅ Build Mode and Critique Mode are now aligned philosophically
+- ✅ Less frustration - statements built through the system should pass critique
+- ✅ Still maintains quality standards - truly generic JTBDs will still fail
+- ✅ Affects both web and mobile apps (server-side change)
+
+**Example:**
+- ❌ Old behavior: "Consolidate supplier contracts" alone → criticized as too generic
+- ✅ New behavior: "Consolidate supplier contracts from 150 to 100, reducing COGS from 72% to 68.4%" → recognized as bespoke due to specific metrics
+
+**Philosophy:**
+The "Glass Slipper Test" should apply to whether someone else could execute **this exact JTBD**, not whether the action verb sounds impressive. The metrics (150→100, 72%→68.4%) make this JTBD unique to this organization.
+
+---
+
+#### Bug Fix: Back Button in Built JTBD History Returns to Home
+**Location:** `client/src/pages/build-mode.tsx:41, 97, 683`
+
+**Problem:**
+When viewing a Built JTBD from Recent Work on the home page:
+1. User clicks a JTBD from "Built JTBDs" section
+2. Review page opens showing the polished statement
+3. User clicks the back button (arrow)
+4. ❌ **Bug**: Goes to the "When" step of Build flow instead of returning to Home
+
+This was confusing because the user was viewing history, not actively building a JTBD.
+
+**Root Cause:**
+The back button in the review stage always called `setStage('when')` without checking if the user was viewing from history or actively building.
+
+**Solution:**
+Added `isViewingHistory` flag to track when the review page was loaded from Recent Work, and updated the back button to navigate to home when viewing history.
+
+**Implementation:**
+
+1. **Added state tracking**:
+```typescript
+const [isViewingHistory, setIsViewingHistory] = useState(false);
+```
+
+2. **Set flag when loading from history**:
+```typescript
+useEffect(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const stageParam = urlParams.get('stage');
+
+  if (stageParam === 'review') {
+    const savedData = localStorage.getItem('build-review-data');
+    if (savedData) {
+      // ... load data ...
+      setStage('review');
+      setIsViewingHistory(true);  // ✅ Mark as viewing history
+    }
+  }
+}, []);
+```
+
+3. **Updated back button logic**:
+```typescript
+// Before
+<Button onClick={() => setStage('when')}>
+  <ArrowLeft />
+</Button>
+
+// After
+<Button onClick={() => isViewingHistory ? setLocation('/') : setStage('when')}>
+  <ArrowLeft />
+</Button>
+```
+
+**Impact:**
+- ✅ Back button now correctly returns to Home when viewing history
+- ✅ Back button still goes to "When" step when actively building a JTBD
+- ✅ Web app only (mobile already used `navigation.goBack()` which worked correctly)
+
+**Mobile Note:**
+Mobile app didn't have this issue because it uses React Navigation's `goBack()` which automatically returns to the previous screen (Home).

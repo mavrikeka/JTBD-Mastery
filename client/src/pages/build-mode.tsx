@@ -38,6 +38,7 @@ export default function BuildMode() {
   const [showHints, setShowHints] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [polishedStatement, setPolishedStatement] = useState('');
+  const [isViewingHistory, setIsViewingHistory] = useState(false);
 
   // Cache for API suggestions
   const suggestionsCache = useRef(new Map<string, string[]>());
@@ -93,6 +94,7 @@ export default function BuildMode() {
             });
             setPolishedStatement(jtbd.assembled);
             setStage('review');
+            setIsViewingHistory(true); // Mark as viewing from history
           }
 
           // Clean up
@@ -675,7 +677,12 @@ export default function BuildMode() {
       <div className="min-h-screen bg-background flex flex-col">
         <header className="p-4 border-b border-border">
           <div className="max-w-4xl mx-auto">
-            <Button variant="ghost" size="icon" onClick={() => setStage('when')} data-testid="button-back">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => isViewingHistory ? setLocation('/') : setStage('when')}
+              data-testid="button-back"
+            >
               <ArrowLeft className="w-5 h-5" />
             </Button>
           </div>
