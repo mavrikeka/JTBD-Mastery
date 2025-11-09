@@ -69,7 +69,7 @@ export default function HomePage() {
         contentContainerStyle={styles.content}
       >
       <View style={styles.header}>
-        <Text style={styles.greeting}>Welcome back! 👋</Text>
+        <Text style={styles.greeting}>JTBD Mastery!</Text>
         <Text style={styles.subtitle}>
           Master the art of writing excellent Jobs-to-be-Done statements.
         </Text>
