@@ -12,7 +12,7 @@ All notable changes to the JTBD Mastery project.
 - API URL now configured in `jtbd-mobile/app.json` under `extra.apiBaseUrl`
 
 ### Added
-- **Production deployment URL:** `https://jtbd-mastery-ceoworks.replit.app`
+- **Production deployment URL:** `https://jtbd-mastery-production.up.railway.app`
 - New file: `jtbd-mobile/.env.example` - Documentation for mobile environment variables
 - New file: `docs/development/deployment-guide.md` - Comprehensive deployment instructions
 - New dependency: `expo-constants` package for reading app configuration
@@ -43,7 +43,7 @@ import Constants from "expo-constants";
 
 export const API_BASE_URL =
   Constants.expoConfig?.extra?.apiBaseUrl ||
-  'https://jtbd-mastery-ceoworks.replit.app';
+  'https://jtbd-mastery-production.up.railway.app';
 ```
 
 **Configuration:**
@@ -52,7 +52,7 @@ export const API_BASE_URL =
 {
   "expo": {
     "extra": {
-      "apiBaseUrl": "https://jtbd-mastery-ceoworks.replit.app"
+      "apiBaseUrl": "https://jtbd-mastery-production.up.railway.app"
     }
   }
 }

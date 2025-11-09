@@ -7,7 +7,7 @@ import Constants from "expo-constants";
 // "apiBaseUrl": "http://192.168.68.111:5001"
 export const API_BASE_URL =
   Constants.expoConfig?.extra?.apiBaseUrl ||
-  'https://jtbd-mastery-ceoworks.replit.app';
+  'https://jtbd-mastery-production.up.railway.app';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -29,9 +29,15 @@ export async function apiRequest(
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+      // Add headers to bypass Replit's CSRF protection for API requests
+      "X-Requested-With": "XMLHttpRequest",
+    };
+
     const res = await fetch(fullUrl, {
       method,
-      headers: data ? { "Content-Type": "application/json" } : {},
+      headers,
       body: data ? JSON.stringify(data) : undefined,
       signal: controller.signal,
     });

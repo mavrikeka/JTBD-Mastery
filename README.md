@@ -22,20 +22,27 @@ Available on both **web** and **mobile** (React Native/Expo).
 
 ## Quick Start
 
-### Web Application
+### Production Deployment
+
+**Live Application**: https://jtbd-mastery-production.up.railway.app
+
+The backend API is deployed on Railway.app and accessible to both web and mobile clients.
+
+### Local Development
+
+#### Web Application
 
 ```bash
 # Install dependencies
-cd client
 npm install
 
 # Start development server
 npm run dev
 
-# Open browser to http://localhost:5173
+# Open browser to http://localhost:5000
 ```
 
-### Mobile Application
+#### Mobile Application
 
 ```bash
 # Install dependencies
@@ -48,13 +55,9 @@ npx expo start
 # Scan QR code with Expo Go app (iOS/Android)
 ```
 
-### Backend Server
+#### Backend Server (Local)
 
 ```bash
-# Install dependencies
-cd server
-npm install
-
 # Configure environment
 cp .env.example .env
 # Add your Agent.ai API key to .env
@@ -62,7 +65,7 @@ cp .env.example .env
 # Start server
 npm run dev
 
-# Server runs on http://localhost:3001
+# Server runs on http://localhost:5000
 ```
 
 ## Tech Stack
@@ -84,12 +87,14 @@ npm run dev
 - Node.js + Express
 - TypeScript
 - Agent.ai (Claude Sonnet 4 / GPT-4o)
+- Railway.app (Production Deployment)
+- CORS enabled for mobile app access
 
 ## Project Structure
 
 ```
 JTBD-Mastery/
-├── client/              # Web application (React + Vite)
+├── client/              # Web application (React + Vite) [integrated with backend]
 ├── jtbd-mobile/         # Mobile application (React Native + Expo)
 ├── server/              # Backend API (Express + AI integration)
 ├── docs/                # Documentation
@@ -104,59 +109,79 @@ JTBD-Mastery/
 - **[Architecture Overview](docs/architecture/codebase-overview.md)** - Comprehensive technical documentation
 - **[Quick Reference](docs/development/quick-reference.md)** - Developer quick start guide
 - **[Design Guidelines](docs/development/design-guidelines.md)** - UI/UX design principles
-- **[Mobile Quick Start](jtbd-mobile/docs/quick-start.md)** - Mobile-specific setup guide
+- **[Mobile API Guide](MOBILE_API_GUIDE.md)** - Mobile app API integration guide
+- **[Railway Deployment](RAILWAY_ACCESS.md)** - Production deployment guide
 
 ## Environment Variables
 
-### Web (`client/.env`)
-```
-VITE_API_URL=http://localhost:3001
-```
-
-### Mobile (`jtbd-mobile/.env`)
-```
-API_URL=http://localhost:3001
-```
-
-### Server (`server/.env`)
+### Production (Railway)
 ```
 AGENT_AI_API_KEY=your_api_key_here
-PORT=3001
+PORT=5000  # Automatically set by Railway
+```
+
+### Local Development (`.env`)
+```
+AGENT_AI_API_KEY=your_api_key_here
+PORT=5001  # Local development port (5000 conflicts with macOS AirPlay)
+```
+
+### Mobile App (`jtbd-mobile/src/lib/queryClient.ts`)
+```typescript
+export const API_BASE_URL = 'https://jtbd-mastery-production.up.railway.app';
+// Can be overridden via app.json for local development
 ```
 
 ## Development
 
 ```bash
-# Run all services concurrently
-npm run dev              # From root (if configured)
+# Run locally
+npm run dev              # Starts backend + web frontend on :5000
 
-# Or run individually
-cd client && npm run dev       # Web on :5173
-cd server && npm run dev       # API on :3001
+# Or run mobile app
 cd jtbd-mobile && npx expo start  # Mobile via Expo
 ```
 
-## Building for Production
+## Deployment
 
-### Web
+### Railway (Current Production)
+
+The app is currently deployed to Railway.app:
+- **URL**: https://jtbd-mastery-production.up.railway.app
+- **Platform**: Railway.app
+- **Auto-deploy**: Push to main branch triggers deployment
+
+To deploy:
+1. Push changes to GitHub
+2. Railway automatically detects changes
+3. Builds and deploys (takes ~2-3 minutes)
+4. Access at production URL
+
+### Building Locally
+
 ```bash
-cd client
+# Build for production
 npm run build
-# Output: client/dist/
+
+# Start production build
+npm run start
+
+# Outputs:
+# - dist/ - Compiled backend
+# - dist/public/ - Static web files
 ```
 
-### Mobile
+### Mobile App Build
+
 ```bash
 cd jtbd-mobile
-eas build
-# Requires Expo Application Services (EAS) setup
-```
 
-### Server
-```bash
-cd server
-npm run build
-# Output: server/dist/
+# Development build
+npx expo start
+
+# Production build (requires EAS)
+eas build --platform ios
+eas build --platform android
 ```
 
 ## Contributing

@@ -4,8 +4,8 @@ This guide shows how to use the JTBD Mastery API from your mobile app or any ext
 
 ## Base URLs
 
-- **Development**: `http://localhost:5001`
-- **Production (Replit)**: `https://jtbd-mastery-ceoworks.replit.app`
+- **Production (Railway)**: `https://jtbd-mastery-production.up.railway.app`
+- **Local Development**: `http://localhost:5001`
 
 ## CORS Configuration
 
@@ -53,7 +53,7 @@ Content-Type: application/json
 
 **Example cURL**:
 ```bash
-curl -X POST https://jtbd-mastery-ceoworks.replit.app/api/critique \
+curl -X POST https://jtbd-mastery-production.up.railway.app/api/critique \
   -H "Content-Type: application/json" \
   -d '{
     "jtbdStatement": "Consolidate supplier contracts from 150 to 100 while reducing COGS from 72% to 68.4% by Q2 2027"
@@ -62,7 +62,7 @@ curl -X POST https://jtbd-mastery-ceoworks.replit.app/api/critique \
 
 **Example JavaScript/TypeScript**:
 ```typescript
-const response = await fetch('https://jtbd-mastery-ceoworks.replit.app/api/critique', {
+const response = await fetch('https://jtbd-mastery-production.up.railway.app/api/critique', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ console.log(critique);
 ```typescript
 const analyzeJTBD = async (statement: string) => {
   try {
-    const response = await fetch('https://jtbd-mastery-ceoworks.replit.app/api/critique', {
+    const response = await fetch('https://jtbd-mastery-production.up.railway.app/api/critique', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -134,7 +134,7 @@ Content-Type: application/json
 
 **Example cURL**:
 ```bash
-curl -X POST https://jtbd-mastery-ceoworks.replit.app/api/suggestions \
+curl -X POST https://jtbd-mastery-production.up.railway.app/api/suggestions \
   -H "Content-Type: application/json" \
   -d '{
     "scenarioId": "supply-chain-scenario-1",
@@ -150,7 +150,7 @@ const getSuggestions = async (
   step: 'what' | 'metrics' | 'when',
   currentInput?: string
 ) => {
-  const response = await fetch('https://jtbd-mastery-ceoworks.replit.app/api/suggestions', {
+  const response = await fetch('https://jtbd-mastery-production.up.railway.app/api/suggestions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -193,7 +193,7 @@ Content-Type: application/json
 
 **Example cURL**:
 ```bash
-curl -X POST https://jtbd-mastery-ceoworks.replit.app/api/polish-jtbd \
+curl -X POST https://jtbd-mastery-production.up.railway.app/api/polish-jtbd \
   -H "Content-Type: application/json" \
   -d '{
     "rawStatement": "Consolidate supplier contracts from 150 to 100 while reducing COGS from 72% to 68.4% by Q2 2027"
@@ -203,7 +203,7 @@ curl -X POST https://jtbd-mastery-ceoworks.replit.app/api/polish-jtbd \
 **Example JavaScript/TypeScript**:
 ```typescript
 const polishJTBD = async (rawStatement: string) => {
-  const response = await fetch('https://jtbd-mastery-ceoworks.replit.app/api/polish-jtbd', {
+  const response = await fetch('https://jtbd-mastery-production.up.railway.app/api/polish-jtbd', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
