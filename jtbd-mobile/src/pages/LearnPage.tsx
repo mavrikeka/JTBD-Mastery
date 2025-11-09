@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { X, Check, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react-native';
 import { Button } from '../components/Button';
@@ -11,7 +11,6 @@ import { theme } from '../lib/theme';
 import { updateLearnProgress, saveQuizResult } from '../lib/storage';
 
 export default function LearnPage() {
-  const insets = useSafeAreaInsets();
   const [currentStep, setCurrentStep] = useState<'intro' | 'examples' | 'quiz' | 'summary' | 'review'>('intro');
   const [currentExample, setCurrentExample] = useState(0);
   const [showBadWhy, setShowBadWhy] = useState(false);
@@ -131,16 +130,11 @@ export default function LearnPage() {
   // Intro Stage
   if (currentStep === 'intro') {
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.centerContent,
-          {
-            paddingTop: insets.top + theme.spacing.xl,
-            paddingBottom: 100
-          }
-        ]}
-      >
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.centerContent}
+        >
         <View style={styles.iconContainer}>
           <Lightbulb size={64} color={theme.colors.primary} />
         </View>
@@ -153,7 +147,8 @@ export default function LearnPage() {
         <Button size="lg" onPress={() => setCurrentStep('examples')} fullWidth>
           Start Learning →
         </Button>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
@@ -163,16 +158,11 @@ export default function LearnPage() {
     const showFeedback = showQuizFeedback;
 
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingTop: insets.top + theme.spacing.lg,
-            paddingBottom: 100
-          }
-        ]}
-      >
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+        >
         <Text style={styles.progress}>Question {currentQuizIndex + 1} of {quizQuestions.length}</Text>
 
         <Card style={styles.quizCard}>
@@ -233,7 +223,8 @@ export default function LearnPage() {
             {currentQuizIndex === quizQuestions.length - 1 ? 'See Results' : 'Next Question'} →
           </Button>
         )}
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
@@ -249,16 +240,11 @@ export default function LearnPage() {
     const message = getMessage();
 
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.centerContent,
-          {
-            paddingTop: insets.top + theme.spacing.xl,
-            paddingBottom: 100
-          }
-        ]}
-      >
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.centerContent}
+        >
         <View style={styles.iconContainer}>
           <Text style={styles.trophyIcon}>🏆</Text>
         </View>
@@ -315,23 +301,19 @@ export default function LearnPage() {
             Take Quiz Again
           </Button>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   // Review Stage
   if (currentStep === 'review') {
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingTop: insets.top + theme.spacing.lg,
-            paddingBottom: 100
-          }
-        ]}
-      >
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+        >
         <Text style={styles.progress}>Review Your Answers</Text>
 
         {quizQuestions.map((question, index) => {
@@ -422,21 +404,17 @@ export default function LearnPage() {
             Take Quiz Again
           </Button>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={[
-        styles.content,
-        {
-          paddingTop: insets.top + theme.spacing.lg,
-          paddingBottom: 100 // Extra space for tab bar
-        }
-      ]}
-    >
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
       <Text style={styles.progress}>Example {currentExample + 1} of {jtbdExamples.length}</Text>
 
       <Card style={styles.contextCard}>
@@ -529,20 +507,27 @@ export default function LearnPage() {
           {currentExample === jtbdExamples.length - 1 ? 'Take Quiz' : 'Next'}
         </Button>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
   },
   content: {
     padding: theme.spacing.lg,
+    paddingBottom: 100, // Extra space for tab bar
   },
   centerContent: {
     padding: theme.spacing.lg,
+    paddingBottom: 100, // Extra space for tab bar
     justifyContent: 'center',
     alignItems: 'center',
   },

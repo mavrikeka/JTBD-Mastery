@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Keyboard } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '../navigation/SimpleNavigator';
 import { useMutation } from '@tanstack/react-query';
@@ -17,15 +17,6 @@ import { updateCritiqueProgress } from '../lib/storage';
 const critiqueCache = new Map<string, CritiqueResponse>();
 
 // Helper functions for status display
-function getStatusIcon(status: 'missing' | 'weak' | 'strong' | 'excellent'): string {
-  switch (status) {
-    case 'missing': return '❌';
-    case 'weak': return '⚠️';
-    case 'strong': return '✅';
-    case 'excellent': return '🌟';
-  }
-}
-
 function getStatusText(status: 'missing' | 'weak' | 'strong' | 'excellent'): string {
   switch (status) {
     case 'missing': return 'Missing';
@@ -37,57 +28,76 @@ function getStatusText(status: 'missing' | 'weak' | 'strong' | 'excellent'): str
 
 function getComponentStatusStyle(status: 'missing' | 'weak' | 'strong' | 'excellent') {
   const baseStyle = {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginLeft: 8,
+    borderWidth: 1,
   };
 
   switch (status) {
     case 'missing':
-      return { ...baseStyle, backgroundColor: 'rgba(239, 68, 68, 0.2)' };
+      return { ...baseStyle, backgroundColor: '#FEF2F2', borderColor: '#FECACA' };
     case 'weak':
-      return { ...baseStyle, backgroundColor: 'rgba(251, 191, 36, 0.2)' };
+      return { ...baseStyle, backgroundColor: '#FFFBEB', borderColor: '#FDE68A' };
     case 'strong':
-      return { ...baseStyle, backgroundColor: 'rgba(34, 197, 94, 0.2)' };
+      return { ...baseStyle, backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' };
     case 'excellent':
-      return { ...baseStyle, backgroundColor: 'rgba(168, 85, 247, 0.2)' };
+      return { ...baseStyle, backgroundColor: '#FAF5FF', borderColor: '#E9D5FF' };
+  }
+}
+
+function getStatusTextColor(status: 'missing' | 'weak' | 'strong' | 'excellent'): string {
+  switch (status) {
+    case 'missing': return '#B91C1C';
+    case 'weak': return '#B45309';
+    case 'strong': return '#15803D';
+    case 'excellent': return '#7E22CE';
   }
 }
 
 function getOverallStatusText(status: 'not-ready' | 'needs-work' | 'ready' | 'exemplary'): string {
   switch (status) {
-    case 'not-ready': return '❌ Not Ready';
-    case 'needs-work': return '⚠️ Needs Work';
-    case 'ready': return '✅ Ready to Execute';
-    case 'exemplary': return '🌟 Exemplary';
+    case 'not-ready': return 'Not Ready';
+    case 'needs-work': return 'Needs Work';
+    case 'ready': return 'Ready to Execute';
+    case 'exemplary': return 'Exemplary';
   }
 }
 
 function getOverallStatusStyle(status: 'not-ready' | 'needs-work' | 'ready' | 'exemplary') {
   const baseStyle = {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
     alignSelf: 'center' as const,
-    marginTop: 8,
+    marginTop: 12,
+    borderWidth: 1,
   };
 
   switch (status) {
     case 'not-ready':
-      return { ...baseStyle, backgroundColor: 'rgba(239, 68, 68, 0.2)' };
+      return { ...baseStyle, backgroundColor: '#FEF2F2', borderColor: '#FCA5A5' };
     case 'needs-work':
-      return { ...baseStyle, backgroundColor: 'rgba(251, 191, 36, 0.2)' };
+      return { ...baseStyle, backgroundColor: '#FFFBEB', borderColor: '#FCD34D' };
     case 'ready':
-      return { ...baseStyle, backgroundColor: 'rgba(34, 197, 94, 0.2)' };
+      return { ...baseStyle, backgroundColor: '#F0FDF4', borderColor: '#86EFAC' };
     case 'exemplary':
-      return { ...baseStyle, backgroundColor: 'rgba(168, 85, 247, 0.2)' };
+      return { ...baseStyle, backgroundColor: '#FAF5FF', borderColor: '#D8B4FE' };
+  }
+}
+
+function getOverallStatusTextColor(status: 'not-ready' | 'needs-work' | 'ready' | 'exemplary'): string {
+  switch (status) {
+    case 'not-ready': return '#B91C1C';
+    case 'needs-work': return '#B45309';
+    case 'ready': return '#15803D';
+    case 'exemplary': return '#7E22CE';
   }
 }
 
 export default function CritiquePage() {
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
   const [jtbdStatement, setJtbdStatement] = useState('');
   const [critique, setCritique] = useState<CritiqueResponse | null>(null);
   const [expandedSection, setExpandedSection] = useState<'what' | 'howMuch' | 'when' | null>(null);
@@ -172,11 +182,12 @@ export default function CritiquePage() {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + theme.spacing.lg }]}
-      keyboardShouldPersistTaps="handled"
-    >
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
       <View style={styles.header}>
         <View style={styles.iconContainer}>
           <Search size={48} color={theme.colors.primary} />
@@ -193,10 +204,10 @@ export default function CritiquePage() {
         onChangeText={setJtbdStatement}
         placeholder="Paste your Jobs-to-be-Done statement here..."
         minHeight={150}
-        editable={!isViewingHistory}
+        editable={!isViewingHistory && critique === null}
       />
 
-      {!isViewingHistory && (
+      {!isViewingHistory && critique === null && (
         <Button
           onPress={handleCritique}
           disabled={!jtbdStatement.trim() || critiqueMutation.isPending}
@@ -212,9 +223,11 @@ export default function CritiquePage() {
         <Card style={styles.resultCard}>
           {/* Overall Status */}
           <View style={styles.overallStatusContainer}>
-            <Text style={styles.overallStatusLabel}>Overall Status</Text>
+            <Text style={styles.overallStatusLabel}>OVERALL STATUS</Text>
             <View style={getOverallStatusStyle(critique.overallStatus)}>
-              <Text style={styles.statusBadgeText}>{getOverallStatusText(critique.overallStatus)}</Text>
+              <Text style={[styles.statusBadgeText, { color: getOverallStatusTextColor(critique.overallStatus) }]}>
+                {getOverallStatusText(critique.overallStatus)}
+              </Text>
             </View>
           </View>
 
@@ -228,9 +241,9 @@ export default function CritiquePage() {
             >
               <View style={styles.componentRow}>
                 <View style={styles.componentLabelContainer}>
-                  <Text style={styles.componentLabel}>WHAT</Text>
+                  <Text style={styles.componentLabel}>What</Text>
                   <View style={getComponentStatusStyle(critique.whatStatus)}>
-                    <Text style={styles.statusBadgeTextSmall}>
+                    <Text style={[styles.statusBadgeTextSmall, { color: getStatusTextColor(critique.whatStatus) }]}>
                       {getStatusText(critique.whatStatus)}
                     </Text>
                   </View>
@@ -266,9 +279,9 @@ export default function CritiquePage() {
             >
               <View style={styles.componentRow}>
                 <View style={styles.componentLabelContainer}>
-                  <Text style={styles.componentLabel}>HOW MUCH</Text>
+                  <Text style={styles.componentLabel}>How Much</Text>
                   <View style={getComponentStatusStyle(critique.howMuchStatus)}>
-                    <Text style={styles.statusBadgeTextSmall}>
+                    <Text style={[styles.statusBadgeTextSmall, { color: getStatusTextColor(critique.howMuchStatus) }]}>
                       {getStatusText(critique.howMuchStatus)}
                     </Text>
                   </View>
@@ -304,9 +317,9 @@ export default function CritiquePage() {
             >
               <View style={styles.componentRow}>
                 <View style={styles.componentLabelContainer}>
-                  <Text style={styles.componentLabel}>WHEN</Text>
+                  <Text style={styles.componentLabel}>When</Text>
                   <View style={getComponentStatusStyle(critique.whenStatus)}>
-                    <Text style={styles.statusBadgeTextSmall}>
+                    <Text style={[styles.statusBadgeTextSmall, { color: getStatusTextColor(critique.whenStatus) }]}>
                       {getStatusText(critique.whenStatus)}
                     </Text>
                   </View>
@@ -339,8 +352,10 @@ export default function CritiquePage() {
           {critique.improvedVersion && (
             <>
               <View style={styles.divider} />
-              <Text style={styles.improvedTitle}>✨ Improved Version:</Text>
-              <Text style={styles.improvedText}>{critique.improvedVersion}</Text>
+              <View style={styles.improvedContainer}>
+                <Text style={styles.improvedTitle}>Improved Version</Text>
+                <Text style={styles.improvedText}>{critique.improvedVersion}</Text>
+              </View>
             </>
           )}
         </Card>
@@ -360,15 +375,20 @@ export default function CritiquePage() {
             }}
             fullWidth
           >
-            Analyze Another
+            Critique Another
           </Button>
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -411,11 +431,11 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   overallStatusLabel: {
-    fontSize: theme.fontSize.callout,
+    fontSize: theme.fontSize.footnote,
     color: theme.colors.textMuted,
-    fontWeight: theme.fontWeight.semibold,
+    fontWeight: theme.fontWeight.medium,
     textTransform: 'uppercase' as 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   statusBadgeText: {
     fontSize: theme.fontSize.callout,
@@ -452,11 +472,10 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   componentLabel: {
-    fontSize: theme.fontSize.footnote,
-    color: theme.colors.textMuted,
+    fontSize: theme.fontSize.subhead,
+    color: theme.colors.text,
     fontWeight: theme.fontWeight.semibold,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase' as 'uppercase',
+    letterSpacing: 0.3,
   },
   expandedSection: {
     marginTop: theme.spacing.md,
@@ -487,21 +506,22 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase' as 'uppercase',
     letterSpacing: 0.5,
   },
+  improvedContainer: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.lg,
+  },
   improvedTitle: {
-    fontSize: theme.fontSize.title3,
+    fontSize: theme.fontSize.callout,
     fontWeight: theme.fontWeight.semibold,
-    color: theme.colors.text,
+    color: '#15803D',
     marginBottom: theme.spacing.sm,
   },
   improvedText: {
     fontSize: theme.fontSize.subhead,
-    color: theme.colors.text,
+    color: '#166534',
     lineHeight: 22,
-    fontStyle: 'italic' as 'italic',
-    backgroundColor: 'rgba(139, 92, 246, 0.08)',
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    borderLeftWidth: 3,
-    borderLeftColor: '#8B5CF6',
   },
 });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '../navigation/SimpleNavigator';
 import { useMutation } from '@tanstack/react-query';
@@ -35,7 +35,6 @@ const suggestionsCache = new Map<string, string[]>();
 
 export default function BuildPage() {
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
   const [stage, setStage] = useState<BuildStage>('intro');
   const [selectedScenario, setSelectedScenario] = useState<BuildScenario | null>(null);
   const [buildData, setBuildData] = useState<BuildData>({
@@ -187,16 +186,11 @@ export default function BuildPage() {
   // Intro Stage
   if (stage === 'intro') {
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.centerContent,
-          {
-            paddingTop: insets.top + theme.spacing.xl,
-            paddingBottom: 100
-          }
-        ]}
-      >
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.centerContent}
+        >
         <View style={styles.iconContainer}>
           <Hammer size={64} color={theme.colors.primary} />
         </View>
@@ -209,23 +203,19 @@ export default function BuildPage() {
         <Button size="lg" onPress={() => setStage('scenarios')} fullWidth>
           Choose a Scenario →
         </Button>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   // Scenarios Stage
   if (stage === 'scenarios') {
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingTop: insets.top + theme.spacing.lg,
-            paddingBottom: 100
-          }
-        ]}
-      >
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+        >
         <Text style={styles.title}>Choose Your Challenge</Text>
         <Text style={styles.subtitle}>Select a scenario to build your JTBD</Text>
 
@@ -251,23 +241,19 @@ export default function BuildPage() {
             </View>
           </Card>
         ))}
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   // Context Stage
   if (stage === 'context' && selectedScenario) {
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingTop: insets.top + theme.spacing.lg,
-            paddingBottom: 100
-          }
-        ]}
-      >
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+        >
         <View style={styles.contextHeader}>
           <Text style={styles.title}>{selectedScenario.role}</Text>
           <Text style={styles.contextSubtitle}>{selectedScenario.challenge}</Text>
@@ -304,7 +290,8 @@ export default function BuildPage() {
         <Button size="lg" onPress={() => setStage('what')} fullWidth>
           Start Building JTBD →
         </Button>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
@@ -313,16 +300,11 @@ export default function BuildPage() {
   // What Stage
   if (stage === 'what' && selectedScenario) {
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingTop: insets.top + theme.spacing.lg,
-            paddingBottom: 100
-          }
-        ]}
-      >
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+        >
         <ProgressBar current={currentStep} total={3} />
 
         {selectedScenario && (
@@ -472,7 +454,8 @@ export default function BuildPage() {
         >
           Continue →
         </Button>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
@@ -481,16 +464,11 @@ export default function BuildPage() {
     const metricsValid = buildData.metrics.length > 0 && buildData.metrics.every(m => m.name && m.current && m.target);
 
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingTop: insets.top + theme.spacing.lg,
-            paddingBottom: 100
-          }
-        ]}
-      >
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+        >
         <ProgressBar current={currentStep} total={3} />
 
         {selectedScenario && (
@@ -661,23 +639,19 @@ export default function BuildPage() {
         >
           Continue →
         </Button>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
   // When Stage
   if (stage === 'when' && selectedScenario) {
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingTop: insets.top + theme.spacing.lg,
-            paddingBottom: 100
-          }
-        ]}
-      >
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+        >
         <ProgressBar current={currentStep} total={3} />
 
         {selectedScenario && (
@@ -826,7 +800,8 @@ export default function BuildPage() {
         >
           Continue →
         </Button>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
@@ -835,16 +810,11 @@ export default function BuildPage() {
     const displayStatement = polishedStatement || polishMutation.data || assembledJTBD;
 
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingTop: insets.top + theme.spacing.lg,
-            paddingBottom: 100
-          }
-        ]}
-      >
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+        >
         <Text style={styles.title}>Your Completed JTBD</Text>
         <Text style={styles.subtitle}>
           {polishMutation.isPending
@@ -917,7 +887,8 @@ export default function BuildPage() {
             Build Another
           </Button>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
@@ -944,15 +915,21 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
   },
   content: {
     padding: theme.spacing.lg,
+    paddingBottom: 100, // Extra space for tab bar
   },
   centerContent: {
     padding: theme.spacing.lg,
+    paddingBottom: 100, // Extra space for tab bar
     justifyContent: 'center',
     alignItems: 'center',
   },

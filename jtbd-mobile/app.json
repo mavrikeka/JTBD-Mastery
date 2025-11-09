@@ -14,7 +14,10 @@
     "description": "Master the art of writing excellent Jobs-to-be-Done statements through interactive learning",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jtbd.mastery"
+      "bundleIdentifier": "com.jtbd.mastery",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -29,7 +32,7 @@
     "extra": {
       "apiBaseUrl": "https://jtbd-mastery-production.up.railway.app",
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "22d87a23-0e89-4808-8e87-197c0d037e44"
       }
     }
   }

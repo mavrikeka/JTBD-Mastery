@@ -13,15 +13,6 @@ import { useToast } from "@/hooks/use-toast";
 import { updateCritiqueProgress } from "@/lib/storage";
 
 // Helper functions for status display
-function getStatusIcon(status: 'missing' | 'weak' | 'strong' | 'excellent'): string {
-  switch (status) {
-    case 'missing': return '❌';
-    case 'weak': return '⚠️';
-    case 'strong': return '✅';
-    case 'excellent': return '🌟';
-  }
-}
-
 function getStatusText(status: 'missing' | 'weak' | 'strong' | 'excellent'): string {
   switch (status) {
     case 'missing': return 'Missing';
@@ -33,28 +24,28 @@ function getStatusText(status: 'missing' | 'weak' | 'strong' | 'excellent'): str
 
 function getOverallStatusText(status: 'not-ready' | 'needs-work' | 'ready' | 'exemplary'): string {
   switch (status) {
-    case 'not-ready': return '❌ Not Ready';
-    case 'needs-work': return '⚠️ Needs Work';
-    case 'ready': return '✅ Ready to Execute';
-    case 'exemplary': return '🌟 Exemplary';
+    case 'not-ready': return 'Not Ready';
+    case 'needs-work': return 'Needs Work';
+    case 'ready': return 'Ready to Execute';
+    case 'exemplary': return 'Exemplary';
   }
 }
 
 function getComponentStatusColor(status: 'missing' | 'weak' | 'strong' | 'excellent'): string {
   switch (status) {
-    case 'missing': return 'bg-destructive/20 text-destructive border-destructive/40';
-    case 'weak': return 'bg-chart-4/20 text-chart-4 border-chart-4/40';
-    case 'strong': return 'bg-chart-3/20 text-chart-3 border-chart-3/40';
-    case 'excellent': return 'bg-purple-500/20 text-purple-600 border-purple-500/40';
+    case 'missing': return 'bg-red-50 text-red-700 border-red-200';
+    case 'weak': return 'bg-amber-50 text-amber-700 border-amber-200';
+    case 'strong': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    case 'excellent': return 'bg-purple-50 text-purple-700 border-purple-200';
   }
 }
 
 function getOverallStatusColor(status: 'not-ready' | 'needs-work' | 'ready' | 'exemplary'): string {
   switch (status) {
-    case 'not-ready': return 'bg-destructive/20 text-destructive border-destructive/40';
-    case 'needs-work': return 'bg-chart-4/20 text-chart-4 border-chart-4/40';
-    case 'ready': return 'bg-chart-3/20 text-chart-3 border-chart-3/40';
-    case 'exemplary': return 'bg-purple-500/20 text-purple-600 border-purple-500/40';
+    case 'not-ready': return 'bg-red-50 text-red-700 border-red-300';
+    case 'needs-work': return 'bg-amber-50 text-amber-700 border-amber-300';
+    case 'ready': return 'bg-emerald-50 text-emerald-700 border-emerald-300';
+    case 'exemplary': return 'bg-purple-50 text-purple-700 border-purple-300';
   }
 }
 
@@ -218,7 +209,7 @@ export default function CritiqueMode() {
                   placeholder='Example: "Implement lean manufacturing and Six Sigma quality control systems across all production lines, reducing defect rate from 4.5% to 1.2% and eliminating $2.1M in annual losses by December 2026"'
                   rows={6}
                   className="w-full"
-                  disabled={critiqueMutation.isPending || isViewingHistory}
+                  disabled={critiqueMutation.isPending || isViewingHistory || critique !== null}
                   data-testid="input-jtbd-statement"
                 />
                 <p className="text-sm text-muted-foreground mt-2">
@@ -226,39 +217,27 @@ export default function CritiqueMode() {
                 </p>
               </div>
 
-              {!isViewingHistory && (
-                <div className="flex gap-3">
-                  <Button
-                    variant="default"
-                    size="lg"
-                    onClick={handleAnalyze}
-                    disabled={critiqueMutation.isPending || !jtbdInput.trim()}
-                    className="flex-1"
-                    data-testid="button-analyze"
-                  >
-                    {critiqueMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <Search className="w-5 h-5 mr-2" />
-                        Analyze JTBD
-                      </>
-                    )}
-                  </Button>
-                  {critique && (
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      onClick={handleReset}
-                      data-testid="button-reset"
-                    >
-                      New Analysis
-                    </Button>
+              {!isViewingHistory && !critique && (
+                <Button
+                  variant="default"
+                  size="lg"
+                  onClick={handleAnalyze}
+                  disabled={critiqueMutation.isPending || !jtbdInput.trim()}
+                  className="w-full"
+                  data-testid="button-analyze"
+                >
+                  {critiqueMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-5 h-5 mr-2" />
+                      Analyze JTBD
+                    </>
                   )}
-                </div>
+                </Button>
               )}
             </div>
           </Card>
@@ -272,9 +251,9 @@ export default function CritiqueMode() {
               <Card className="p-8">
                 {/* Overall Status */}
                 <div className="text-center mb-8">
-                  <h3 className="text-lg font-semibold text-foreground mb-3">Overall Status</h3>
-                  <div className={`inline-block px-6 py-3 rounded-full border-2 ${getOverallStatusColor(critique.overallStatus)}`}>
-                    <span className="text-lg font-bold">{getOverallStatusText(critique.overallStatus)}</span>
+                  <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground mb-4">Overall Status</h3>
+                  <div className={`inline-block px-8 py-3 rounded-lg border shadow-sm ${getOverallStatusColor(critique.overallStatus)}`}>
+                    <span className="text-xl font-semibold">{getOverallStatusText(critique.overallStatus)}</span>
                   </div>
                 </div>
 
@@ -285,12 +264,12 @@ export default function CritiqueMode() {
                   {/* WHAT Component */}
                   <Collapsible open={expandedWhat} onOpenChange={setExpandedWhat}>
                     <div className="border border-border rounded-lg">
-                      <CollapsibleTrigger className="w-full p-4 hover:bg-accent/50 transition-colors">
+                      <CollapsibleTrigger className="w-full p-5 hover:bg-accent/30 transition-colors rounded-t-lg">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <span className="font-bold text-foreground">WHAT</span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getComponentStatusColor(critique.whatStatus)}`}>
-                              {getStatusIcon(critique.whatStatus)} {getStatusText(critique.whatStatus)}
+                            <span className="font-semibold text-foreground text-sm uppercase tracking-wide">What</span>
+                            <span className={`px-3 py-1.5 rounded-md text-xs font-semibold border shadow-sm ${getComponentStatusColor(critique.whatStatus)}`}>
+                              {getStatusText(critique.whatStatus)}
                             </span>
                           </div>
                           <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${expandedWhat ? 'rotate-180' : ''}`} />
@@ -318,12 +297,12 @@ export default function CritiqueMode() {
                   {/* HOW MUCH Component */}
                   <Collapsible open={expandedHowMuch} onOpenChange={setExpandedHowMuch}>
                     <div className="border border-border rounded-lg">
-                      <CollapsibleTrigger className="w-full p-4 hover:bg-accent/50 transition-colors">
+                      <CollapsibleTrigger className="w-full p-5 hover:bg-accent/30 transition-colors rounded-t-lg">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <span className="font-bold text-foreground">HOW MUCH</span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getComponentStatusColor(critique.howMuchStatus)}`}>
-                              {getStatusIcon(critique.howMuchStatus)} {getStatusText(critique.howMuchStatus)}
+                            <span className="font-semibold text-foreground text-sm uppercase tracking-wide">How Much</span>
+                            <span className={`px-3 py-1.5 rounded-md text-xs font-semibold border shadow-sm ${getComponentStatusColor(critique.howMuchStatus)}`}>
+                              {getStatusText(critique.howMuchStatus)}
                             </span>
                           </div>
                           <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${expandedHowMuch ? 'rotate-180' : ''}`} />
@@ -351,12 +330,12 @@ export default function CritiqueMode() {
                   {/* WHEN Component */}
                   <Collapsible open={expandedWhen} onOpenChange={setExpandedWhen}>
                     <div className="border border-border rounded-lg">
-                      <CollapsibleTrigger className="w-full p-4 hover:bg-accent/50 transition-colors">
+                      <CollapsibleTrigger className="w-full p-5 hover:bg-accent/30 transition-colors rounded-t-lg">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <span className="font-bold text-foreground">WHEN</span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getComponentStatusColor(critique.whenStatus)}`}>
-                              {getStatusIcon(critique.whenStatus)} {getStatusText(critique.whenStatus)}
+                            <span className="font-semibold text-foreground text-sm uppercase tracking-wide">When</span>
+                            <span className={`px-3 py-1.5 rounded-md text-xs font-semibold border shadow-sm ${getComponentStatusColor(critique.whenStatus)}`}>
+                              {getStatusText(critique.whenStatus)}
                             </span>
                           </div>
                           <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform ${expandedWhen ? 'rotate-180' : ''}`} />
@@ -386,12 +365,12 @@ export default function CritiqueMode() {
                 {critique.improvedVersion && (
                   <>
                     <div className="border-t border-border my-6"></div>
-                    <div className="bg-chart-3/10 border-l-4 border-chart-3 p-4 rounded">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Check className="w-5 h-5 text-chart-3" />
-                        <h3 className="text-lg font-bold text-foreground">✨ Improved Version:</h3>
+                    <div className="bg-emerald-50 border border-emerald-200 p-5 rounded-lg shadow-sm">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Check className="w-5 h-5 text-emerald-600" />
+                        <h3 className="text-base font-semibold text-emerald-900">Improved Version</h3>
                       </div>
-                      <p className="text-foreground leading-relaxed">{critique.improvedVersion}</p>
+                      <p className="text-emerald-800 leading-relaxed text-sm">{critique.improvedVersion}</p>
                     </div>
                   </>
                 )}
@@ -412,7 +391,7 @@ export default function CritiqueMode() {
                   onClick={handleReset}
                   data-testid="button-analyze-another"
                 >
-                  Analyze Another
+                  Critique Another
                 </Button>
               </div>
             </motion.div>

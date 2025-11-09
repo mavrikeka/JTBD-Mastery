@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, StatusBar } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '../navigation/SimpleNavigator';
 import { Lightbulb, Hammer, Search, History, Clock, ChevronDown } from 'lucide-react-native';
@@ -12,7 +12,6 @@ import { theme } from '../lib/theme';
 
 export default function HomePage() {
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
   const [progress, setProgress] = useState<UserProgress>({
     learnMode: { completed: false, examplesViewed: 0 },
     buildMode: { completed: false, jtbdsCreated: 0 },
@@ -64,16 +63,11 @@ export default function HomePage() {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={[
-        styles.content,
-        {
-          paddingTop: insets.top + theme.spacing.lg,
-          paddingBottom: 100 // Extra space for tab bar
-        }
-      ]}
-    >
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
       <View style={styles.header}>
         <Text style={styles.greeting}>Welcome back! 👋</Text>
         <Text style={styles.subtitle}>
@@ -268,17 +262,23 @@ export default function HomePage() {
           💡 Use the tabs below to <Text style={styles.tipHighlight}>Learn</Text> from examples, <Text style={styles.tipHighlight}>Build</Text> your own JTBDs, or <Text style={styles.tipHighlight}>Critique</Text> existing statements
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
   },
   content: {
     padding: theme.spacing.lg,
+    paddingBottom: 100, // Extra space for tab bar
   },
   header: {
     marginBottom: theme.spacing.xl,
