@@ -5,9 +5,15 @@ import Constants from "expo-constants";
 // Configured in app.json under "extra.apiBaseUrl"
 // For local development, you can override this in app.json to use your local IP:
 // "apiBaseUrl": "http://192.168.68.111:5001"
-export const API_BASE_URL =
-  Constants.expoConfig?.extra?.apiBaseUrl ||
-  'https://jtbd-mastery-production.up.railway.app';
+const configuredUrl = Constants.expoConfig?.extra?.apiBaseUrl;
+
+if (!configuredUrl) {
+  throw new Error(
+    'API_BASE_URL is not configured. Please add "apiBaseUrl" to the "extra" section in app.json'
+  );
+}
+
+export const API_BASE_URL = configuredUrl;
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

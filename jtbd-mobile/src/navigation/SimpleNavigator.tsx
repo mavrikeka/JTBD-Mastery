@@ -1,3 +1,29 @@
+/**
+ * SimpleNavigator - Custom lightweight bottom tab navigation
+ *
+ * WHY NOT REACT NAVIGATION?
+ * This custom navigator is intentionally simple (108 lines) and handles our current needs:
+ * - 4 bottom tab screens
+ * - Simple navigation without deep linking
+ * - No complex navigation state
+ *
+ * WHEN TO MIGRATE TO REACT NAVIGATION:
+ * Consider migrating if you need:
+ * - Deep linking / universal links
+ * - Stack navigation beyond tabs
+ * - Complex navigation state management
+ * - Navigation lifecycle hooks (focus listeners, etc.)
+ * - Native navigation gestures
+ *
+ * TRADE-OFFS OF MIGRATION:
+ * - Time: 6-12 hours of work
+ * - Bundle size: +185KB
+ * - Complexity: More boilerplate code
+ * - Risk: Core functionality refactor
+ *
+ * See docs/CHANGELOG.md [2025-11-11] for detailed rationale.
+ */
+
 import React, { useState, createContext, useContext } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Platform } from 'react-native';
 import { Home, BookOpen, Hammer, Search } from 'lucide-react-native';

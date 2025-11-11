@@ -4,6 +4,73 @@ All notable changes to the JTBD Mastery project.
 
 ---
 
+## [2025-11-11] - Build 5: Performance & Button Responsiveness Fix
+
+### Fixed
+- **Button responsiveness in TestFlight builds** - Removed 2-second polling interval from HomePage that was causing state update conflicts
+- **API URL configuration** - Removed fallback URL to enforce single source of truth in `app.json`
+- **API URL trailing slash** - Fixed double-slash issue in API requests
+
+### Changed
+- **HomePage data loading** (jtbd-mobile/src/pages/HomePage.tsx)
+  - Removed: `setInterval` polling every 2 seconds
+  - Behavior: HomePage now loads data once on mount
+  - Impact: Eliminates constant re-rendering that caused button lag in production builds (Hermes engine)
+  - Trade-off: Recent Work section updates when navigating back to Home, not in real-time
+
+- **API Base URL** (jtbd-mobile/src/lib/queryClient.ts)
+  - Removed: Fallback URL `'https://jtbd-mastery-production.up.railway.app'`
+  - Now: Throws clear error if `apiBaseUrl` not configured in `app.json`
+  - Benefit: Fail-fast approach prevents silent failures with wrong URLs
+
+- **Railway URL** (jtbd-mobile/app.json)
+  - Before: `"https://jtbd-mastery-production-681a.up.railway.app/"`
+  - After: `"https://jtbd-mastery-production-681a.up.railway.app"` (no trailing slash)
+  - Benefit: Prevents double-slash in API paths
+
+### Technical Details
+
+**Why Polling Was Problematic:**
+- Custom `SimpleNavigator` + 2-second polling caused state update conflicts
+- Hermes JavaScript engine (production builds) batches state updates differently than JSC (Expo Go)
+- Bottom navigation state updates competed with HomePage polling updates
+- Resulted in delayed/dropped navigation events
+
+**Why It Only Affected TestFlight:**
+- Expo Go uses JavaScriptCore (JSC) engine with different state update prioritization
+- Production builds use Hermes engine with stricter optimization
+- Development mode has Fast Refresh that masks the issue
+
+### Future Considerations
+
+**Navigation Architecture:**
+Currently using custom `SimpleNavigator` (108 lines, lightweight). If future requirements include:
+- Deep linking
+- Stack navigation beyond bottom tabs
+- Complex navigation state management
+- Native navigation gestures
+
+Consider migrating to **React Navigation** which provides:
+- Built-in focus listeners (eliminates need for polling workarounds)
+- Better performance optimizations
+- Industry-standard patterns
+- Navigation lifecycle hooks
+
+**Trade-offs of migration:**
+- Time investment: 6-12 hours
+- Bundle size: +185KB
+- Migration risk to core functionality
+- Added complexity for simple use case
+
+**Decision:** Keep SimpleNavigator for now. It works well for the current 4-screen bottom tab architecture. Only migrate if adding features that justify the complexity.
+
+### Testing
+- ✅ Verified 60-second timeouts for all Agent.ai API calls (adequate for 10-20s actual duration)
+- ✅ Confirmed Railway server timeout (120s) and Railway platform timeout (300s) are sufficient
+- ✅ Tested API endpoints from production URL
+
+---
+
 ## [2025-11-08] - Mobile API Configuration Refactor
 
 ### Changed
@@ -83,4 +150,4 @@ None - backwards compatible with fallback URL
 
 ---
 
-Last updated: 2025-11-08
+Last updated: 2025-11-11

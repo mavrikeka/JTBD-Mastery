@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.jtbd.mastery",
-      "buildNumber": "3",
+      "buildNumber": "5",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -31,7 +31,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "apiBaseUrl": "https://jtbd-mastery-production-681a.up.railway.app/",
+      "apiBaseUrl": "https://jtbd-mastery-production-681a.up.railway.app",
       "eas": {
         "projectId": "22d87a23-0e89-4808-8e87-197c0d037e44"
       }

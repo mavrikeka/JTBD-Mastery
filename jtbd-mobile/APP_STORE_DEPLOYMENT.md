@@ -4,6 +4,37 @@ Complete guide to deploying your React Native/Expo app to iOS App Store and Goog
 
 ---
 
+## Quick Workflow (For Subsequent Builds)
+
+**Already set up EAS and deployed before?** Skip to here for quick commands.
+
+**⚠️ IMPORTANT**: All commands must be run from the `jtbd-mobile` directory!
+
+```bash
+# Make sure you're in the correct directory
+cd /Users/vikramekambaram/JTBD-Mastery/jtbd-mobile
+
+# Update build number in app.json first
+# iOS: "buildNumber": "4" (increment each build)
+
+# Option 1: Build and auto-submit in one command (recommended)
+eas build --platform ios --profile production --auto-submit
+
+# Option 2: Build then submit separately
+eas build --platform ios --profile production
+eas submit --platform ios --latest
+
+# For Android
+eas build --platform android --profile production --auto-submit
+```
+
+**Common mistakes to avoid:**
+- ❌ Running from wrong directory (will create new EAS project)
+- ❌ Forgetting to increment build number
+- ❌ Not committing changes to git before building
+
+---
+
 ## Prerequisites
 
 ### 1. Developer Accounts

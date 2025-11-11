@@ -27,17 +27,13 @@ export default function HomePage() {
   const [critiquesOpen, setCritiquesOpen] = useState(false);
   const [quizResultsOpen, setQuizResultsOpen] = useState(false);
 
+  // Load data once on mount
+  // Note: Previously had setInterval polling every 2 seconds, but this caused
+  // state update conflicts with navigation in production builds (Hermes engine).
+  // Trade-off: Recent Work updates when navigating back to Home, not in real-time.
+  // See docs/CHANGELOG.md [2025-11-11] for details.
   useEffect(() => {
     loadData();
-  }, []);
-
-  // Reload data periodically to catch new critiques/builds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadData();
-    }, 2000); // Reload every 2 seconds
-
-    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
