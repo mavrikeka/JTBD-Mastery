@@ -8,6 +8,7 @@ All notable changes to the JTBD Mastery project.
 
 ### Fixed
 - **Button responsiveness in TestFlight builds** - Removed 2-second polling interval from HomePage that was causing state update conflicts
+- **Bottom nav touch pressure sensitivity** - Hard presses now register correctly by increasing `delayLongPress` threshold
 - **API URL configuration** - Removed fallback URL to enforce single source of truth in `app.json`
 - **API URL trailing slash** - Fixed double-slash issue in API requests
 
@@ -28,6 +29,15 @@ All notable changes to the JTBD Mastery project.
   - After: `"https://jtbd-mastery-production-681a.up.railway.app"` (no trailing slash)
   - Benefit: Prevents double-slash in API paths
 
+- **Bottom Navigation Touch Handling** (jtbd-mobile/src/navigation/SimpleNavigator.tsx)
+  - Added: `delayLongPress={1000}` to TabButton TouchableOpacity
+  - Added: `delayPressIn={0}` for immediate visual feedback
+  - Added: `pointerEvents="box-none"` wrapper to prevent children from blocking touches
+  - Added: `hitSlop` to extend vertical touch area without horizontal overlap
+  - Fix: Hard presses no longer cancel navigation due to long-press gesture detection
+  - Fix: Entire tab button area now responds to touches (left, center, and right)
+  - Impact: All touch pressures and positions now register correctly
+
 ### Technical Details
 
 **Why Polling Was Problematic:**
@@ -40,6 +50,20 @@ All notable changes to the JTBD Mastery project.
 - Expo Go uses JavaScriptCore (JSC) engine with different state update prioritization
 - Production builds use Hermes engine with stricter optimization
 - Development mode has Fast Refresh that masks the issue
+
+**Touch Pressure Sensitivity Issue:**
+- iOS interprets hard presses as longer touch duration (50-100ms longer)
+- TouchableOpacity has default `delayLongPress={500}`
+- Hard presses crossed threshold, starting long-press gesture detection
+- Long-press detection cancels `onPress` event → navigation doesn't fire
+- Solution: Increase `delayLongPress={1000}` and add `delayPressIn={0}` for immediate feedback
+
+**Touch Target Area Issue:**
+- Icon and Text children were intercepting touch events
+- Only center of button (where icon/text rendered) was responsive
+- Touches to left/right edges weren't reaching TouchableOpacity's onPress
+- Solution: Wrap children in View with `pointerEvents="box-none"` to let touches pass through
+- Added `hitSlop` to prevent horizontal overlap between adjacent tabs while extending vertical area
 
 ### Future Considerations
 

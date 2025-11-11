@@ -80,15 +80,21 @@ export default function SimpleNavigator() {
         style={styles.tabButton}
         onPress={() => navigate(screen)}
         activeOpacity={0.7}
+        delayLongPress={1000}
+        delayPressIn={0}
+        hitSlop={{ top: 5, bottom: 5, left: 0, right: 0 }} // Extend touch area vertically, prevent horizontal overlap
       >
-        <Icon
-          size={24}
-          color={isActive ? theme.colors.primary : theme.colors.textMuted}
-          strokeWidth={isActive ? 2.5 : 2}
-        />
-        <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-          {label}
-        </Text>
+        {/* Wrap children in View with pointerEvents="box-none" to ensure touches pass through */}
+        <View pointerEvents="box-none" style={styles.tabButtonContent}>
+          <Icon
+            size={24}
+            color={isActive ? theme.colors.primary : theme.colors.textMuted}
+            strokeWidth={isActive ? 2.5 : 2}
+          />
+          <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+            {label}
+          </Text>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -133,6 +139,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: theme.spacing.sm,
     minHeight: theme.touchTarget.min, // Ensure minimum touch target
+  },
+  tabButtonContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabLabel: {
     fontSize: theme.fontSize.caption,
