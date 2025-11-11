@@ -37,8 +37,6 @@ export async function apiRequest(
   try {
     const headers: HeadersInit = {
       "Content-Type": "application/json",
-      // Add headers to bypass Replit's CSRF protection for API requests
-      "X-Requested-With": "XMLHttpRequest",
     };
 
     const res = await fetch(fullUrl, {

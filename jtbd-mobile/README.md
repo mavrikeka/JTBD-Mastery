@@ -51,10 +51,18 @@ src/
 ├── components/      # Reusable UI components
 ├── data/           # Static data (examples, scenarios, quiz)
 ├── lib/            # Utilities (storage, API, theme)
-├── navigation/     # React Navigation setup
+├── navigation/     # Custom bottom tab navigation (SimpleNavigator)
 ├── pages/          # Screen components
 └── shared/         # Shared types and schemas
 ```
+
+### Navigation Architecture
+
+The app uses a custom lightweight bottom tab navigator (`SimpleNavigator`) instead of React Navigation:
+- **Why**: Simple 4-screen bottom tab architecture that works well for current needs
+- **Benefits**: Minimal bundle size (~108 lines), easy to understand
+- **Trade-offs**: No deep linking, stack navigation, or built-in lifecycle hooks
+- **Future**: Consider migrating to React Navigation if you need advanced features (see `docs/CHANGELOG.md` [2025-11-11])
 
 ## Building for Production
 
@@ -129,11 +137,27 @@ eas submit --platform android
 
 ### API Endpoint
 
-The app connects to the backend API. Update the base URL in `src/lib/queryClient.ts` if needed:
+The app connects to the backend API. The base URL is configured in `app.json`:
 
-```typescript
-const API_BASE_URL = 'https://your-api-url.com';
+```json
+{
+  "expo": {
+    "extra": {
+      "apiBaseUrl": "https://jtbd-mastery-production-681a.up.railway.app"
+    }
+  }
+}
 ```
+
+**For local development**, change the URL to your local server:
+```json
+"apiBaseUrl": "http://192.168.x.x:5001"
+```
+
+**Important**:
+- No trailing slash in the URL
+- The app will throw an error if `apiBaseUrl` is not configured (fail-fast approach)
+- Restart the Expo dev server after changing `app.json`
 
 ### App Metadata
 
@@ -152,7 +176,7 @@ Update app metadata in `app.json`:
 - **React Native**: Cross-platform mobile framework
 - **Expo**: Development and deployment platform
 - **TypeScript**: Type-safe development
-- **React Navigation**: Navigation library
+- **Custom Navigation**: Lightweight bottom tab navigator (SimpleNavigator)
 - **React Query**: Server state management
 - **AsyncStorage**: Local data persistence
 - **Zod**: Runtime type validation
@@ -160,7 +184,7 @@ Update app metadata in `app.json`:
 ### Key Differences from Web Version
 
 - Replaced `localStorage` with `AsyncStorage`
-- Replaced Wouter with React Navigation
+- Replaced Wouter with custom `SimpleNavigator`
 - Replaced Radix UI with React Native components
 - Replaced Framer Motion with React Native animations
 - Replaced Tailwind CSS with StyleSheet API
@@ -170,8 +194,10 @@ Update app metadata in `app.json`:
 
 - Images are optimized for mobile
 - Data is cached using React Query
-- Navigation uses native stack navigator
+- Navigation uses lightweight custom bottom tabs (no React Navigation overhead)
 - AsyncStorage operations are asynchronous
+- HomePage loads data once on mount (no polling) for better battery life
+- Touch handling optimized with proper `pointerEvents` configuration
 
 ## Testing
 
@@ -186,6 +212,26 @@ npm run android
 ```
 
 ## Troubleshooting
+
+### Button Responsiveness Issues
+
+If you experience button responsiveness issues in production builds (TestFlight/App Store) that don't occur in Expo Go:
+
+**Symptoms:**
+- Bottom navigation buttons don't respond to all touch positions
+- Hard presses don't register
+- Buttons feel laggy or unresponsive
+
+**Cause:**
+- Production builds use Hermes JavaScript engine (different from Expo Go's JSC)
+- Touch event handling can be more sensitive in production
+- State update conflicts can cause missed touch events
+
+**Fixed in Build 5 (2025-11-11):**
+- Removed 2-second polling that caused state update conflicts
+- Added `pointerEvents="none"` to Icon and Text components
+- Increased `delayLongPress` threshold for hard presses
+- See `docs/CHANGELOG.md` for technical details
 
 ### Clear Cache
 
@@ -204,6 +250,13 @@ npx react-native start --reset-cache
 ```bash
 rm -rf node_modules && npm install
 ```
+
+### App Config Not Loading
+
+If you see "API_BASE_URL is not configured" error:
+1. Check that `app.json` has `extra.apiBaseUrl` configured
+2. Restart the Expo dev server
+3. For EAS builds, ensure `app.json` changes are committed to git
 
 ## License
 

@@ -2,11 +2,9 @@
 
 This guide covers deploying the JTBD Mastery application to production.
 
-## Current Deployment: Replit
+## Current Deployment: Railway
 
-The application is currently deployed on **Replit** at:
-- **URL:** https://jtbd-mastery-ceoworks.replit.app
-- **Platform:** Replit Autoscale Deployment
+The application is deployed on **Railway**.
 
 ---
 
@@ -14,10 +12,9 @@ The application is currently deployed on **Replit** at:
 
 ```
 ┌──────────────────────────────────────────────┐
-│         Replit (Backend + Web App)           │
-│  https://jtbd-mastery-ceoworks.replit.app   │
+│         Railway (Backend + Web App)          │
 │                                              │
-│  ├── Express Server (Port 5001→80)          │
+│  ├── Express Server (Port 5001)             │
 │  ├── Static Web App (built from client/)    │
 │  └── API Endpoints (/api/*)                 │
 └──────────────────────────────────────────────┘
@@ -35,67 +32,65 @@ The application is currently deployed on **Replit** at:
 
 ---
 
-## Backend Deployment (Replit)
+## Backend Deployment (Railway)
 
 ### Prerequisites
-- Replit account
-- GitHub repository connected to Replit
+- Railway account (https://railway.app)
+- GitHub repository
 - Agent.ai API key
 
-### Step 1: Connect GitHub to Replit
-1. Go to https://replit.com
-2. Click "Create" → "Import from GitHub"
+### Step 1: Connect GitHub to Railway
+1. Go to https://railway.app
+2. Click "New Project" → "Deploy from GitHub repo"
 3. Select your repository: `JTBD-Mastery`
-4. Replit will auto-detect the project
+4. Railway will auto-detect the Node.js project
 
 ### Step 2: Configure Environment Variables
-1. In Replit, click the **"Secrets"** tab (🔒 icon in left sidebar)
-2. Add the following secrets:
+1. In Railway project dashboard, go to **"Variables"** tab
+2. Add the following environment variables:
 
 | Key | Value | Description |
 |-----|-------|-------------|
 | `AGENT_AI_API_KEY` | Your API key | Get from https://agent.ai/user/settings#credits |
-| `PORT` | `5001` | Server port (mapped to 80 externally) |
+| `PORT` | `5001` | Server port |
+| `NODE_ENV` | `production` | Environment mode |
 
-3. Click "Add Secret" for each
+3. Click "Add Variable" for each
 
-### Step 3: Verify Configuration Files
+### Step 3: Configure Build & Start Commands
 
-**`.replit`** (should already exist):
-```toml
-modules = ["nodejs-20", "web"]
-run = "npm run dev"
+Railway should auto-detect these from `package.json`, but verify:
 
-[deployment]
-deploymentTarget = "autoscale"
-build = ["npm", "run", "build"]
-run = ["npm", "run", "start"]
-
-[[ports]]
-localPort = 5001
-externalPort = 80
+**Build Command:**
+```bash
+npm run build
 ```
 
-**`package.json`** scripts:
+**Start Command:**
+```bash
+npm run start
+```
+
+**package.json** scripts (already configured):
 ```json
 {
   "scripts": {
-    "dev": "tsx server/index.ts",
-    "build": "vite build --outDir dist/public && esbuild server/index.ts --bundle --platform=node --outfile=dist/index.js",
+    "dev": "NODE_ENV=development tsx server/index.ts",
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js"
   }
 }
 ```
 
 ### Step 4: Deploy
-1. Click **"Deploy"** button in Replit
+1. Railway will automatically deploy when you push to your main branch
 2. Wait for build to complete (~2-5 minutes)
-3. Test your deployment at: `https://your-repl-name.replit.app`
+3. Railway will provide a public URL (e.g., `https://your-app.railway.app`)
 
 ### Step 5: Verify Deployment
 Test these endpoints:
-- **Homepage:** https://jtbd-mastery-ceoworks.replit.app
-- **Health check:** https://jtbd-mastery-ceoworks.replit.app/api/suggestions (should return 405 Method Not Allowed for GET)
+- **Homepage:** `https://your-app.railway.app`
+- **Health check:** `https://your-app.railway.app/api/suggestions` (should return 405 Method Not Allowed for GET)
 
 ---
 
@@ -110,7 +105,7 @@ Test these endpoints:
 {
   "expo": {
     "extra": {
-      "apiBaseUrl": "https://jtbd-mastery-ceoworks.replit.app"
+      "apiBaseUrl": "https://your-app.railway.app"
     }
   }
 }
@@ -136,9 +131,7 @@ The mobile app reads the API URL via `expo-constants`:
 // jtbd-mobile/src/lib/queryClient.ts
 import Constants from "expo-constants";
 
-export const API_BASE_URL =
-  Constants.expoConfig?.extra?.apiBaseUrl ||
-  'https://jtbd-mastery-ceoworks.replit.app';
+export const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl;
 ```
 
 ---
@@ -149,7 +142,7 @@ export const API_BASE_URL =
 1. Ensure `app.json` has production `apiBaseUrl`
 2. Run: `npx expo start`
 3. Scan QR code with Expo Go app
-4. App connects to Replit backend
+4. App connects to Railway backend
 
 ### Option 2: TestFlight/Play Store Internal Testing
 
@@ -206,23 +199,23 @@ AGENT_AI_API_KEY=your_key_here
 PORT=5001
 ```
 
-**Production (Replit):**
-- Set in Replit Secrets (see Step 2 above)
-- Replit injects these as environment variables
+**Production (Railway):**
+- Set in Railway Variables tab
+- Railway injects these as environment variables at runtime
 
 ### Mobile (app.json)
 
 **Development:**
 ```json
 "extra": {
-  "apiBaseUrl": "http://192.168.68.111:5001"
+  "apiBaseUrl": "http://192.168.x.x:5001"
 }
 ```
 
 **Production:**
 ```json
 "extra": {
-  "apiBaseUrl": "https://jtbd-mastery-ceoworks.replit.app"
+  "apiBaseUrl": "https://your-app.railway.app"
 }
 ```
 
@@ -231,7 +224,7 @@ PORT=5001
 ## Deployment Checklist
 
 ### Before Deploying Backend:
-- [ ] Environment variables set in Replit Secrets
+- [ ] Environment variables set in Railway
 - [ ] `.gitignore` includes `.env` (don't commit secrets!)
 - [ ] Test locally: `npm run dev`
 - [ ] Test build: `npm run build && npm start`
@@ -252,10 +245,11 @@ PORT=5001
 
 ## Rollback Procedure
 
-### Replit:
-1. Go to Deployments history
-2. Click "Rollback" on previous working deployment
-3. Or redeploy from specific Git commit
+### Railway:
+1. Go to Deployments tab in Railway dashboard
+2. Click on a previous successful deployment
+3. Click "Redeploy"
+4. Or push a revert commit to GitHub
 
 ### Mobile:
 1. Build and submit previous version
@@ -265,26 +259,33 @@ PORT=5001
 
 ## Monitoring & Troubleshooting
 
-### Check Backend Logs (Replit):
-1. Open Replit project
-2. Click **"Console"** tab
-3. View real-time logs
+### Check Backend Logs (Railway):
+1. Open Railway project dashboard
+2. Click **"Deployments"** tab
+3. Click on active deployment
+4. View real-time logs
 
 ### Common Issues:
 
 **❌ Mobile app can't connect to backend**
 - Check `apiBaseUrl` in `app.json`
-- Verify Replit deployment is running
+- Verify Railway deployment is running
 - Test backend URL in browser
+- Check Railway logs for errors
 
 **❌ AI suggestions not working**
-- Check `AGENT_AI_API_KEY` in Replit Secrets
+- Check `AGENT_AI_API_KEY` in Railway Variables
 - Verify API key at https://agent.ai/user/settings#credits
-- Check Replit logs for errors
+- Check Railway logs for errors
+
+**❌ Build failures**
+- Check Railway build logs
+- Verify all dependencies are in package.json
+- Ensure Node.js version compatibility
 
 **❌ CORS errors**
-- Replit should handle CORS automatically
-- Check server CORS configuration if needed
+- Check server CORS configuration in `server/index.ts`
+- Verify allowed origins include mobile app domain
 
 ---
 
@@ -293,9 +294,10 @@ PORT=5001
 ### Backend Alternatives:
 - **Vercel** - Serverless deployment
 - **Render** - Container-based hosting
-- **Railway** - Similar to Replit
+- **Railway** - Current choice (recommended for full-stack apps)
 - **AWS EC2** - Full control, more complex
 - **Heroku** - Traditional PaaS
+- **Fly.io** - Global edge deployment
 
 ### Mobile Alternatives:
 - **Expo EAS** - Managed build service (recommended)
@@ -308,8 +310,8 @@ PORT=5001
 
 ### Production Checklist:
 - [ ] Never commit `.env` files
-- [ ] Use Replit Secrets for API keys
-- [ ] HTTPS only in production (Replit provides this)
+- [ ] Use Railway Variables for API keys
+- [ ] HTTPS only in production (Railway provides this)
 - [ ] Rotate API keys periodically
 - [ ] Monitor API usage and costs
 - [ ] Implement rate limiting (future enhancement)
@@ -318,10 +320,10 @@ PORT=5001
 
 ## Cost Considerations
 
-### Replit:
-- Free tier: Available for basic apps
-- Paid tier: Required for always-on deployments
-- Autoscale: Scales based on traffic
+### Railway:
+- Free tier: $5 free credit per month
+- Pay-as-you-go: Charged for usage beyond free tier
+- Estimated cost: ~$5-20/month for moderate traffic
 
 ### Agent.ai:
 - Pay-per-use API
@@ -334,14 +336,25 @@ PORT=5001
 
 ---
 
-## Next Steps
+## CI/CD Setup (Optional)
 
-1. **Set up CI/CD:** Automate deployments on Git push
-2. **Add monitoring:** Error tracking (Sentry, LogRocket)
-3. **Implement analytics:** Track user behavior
-4. **Database migration:** Move from localStorage to persistent DB
-5. **CDN setup:** Serve static assets faster
+Railway automatically deploys on Git push. To customize:
+
+1. Go to Railway project settings
+2. Configure deployment triggers
+3. Set up custom build commands if needed
+4. Enable/disable automatic deployments
 
 ---
 
-Last updated: 2025-11-08
+## Next Steps
+
+1. **Set up monitoring:** Error tracking (Sentry, LogRocket)
+2. **Implement analytics:** Track user behavior
+3. **Database migration:** Move from localStorage to persistent DB
+4. **CDN setup:** Serve static assets faster
+5. **Add health check endpoint:** Monitor uptime
+
+---
+
+Last updated: 2025-11-11

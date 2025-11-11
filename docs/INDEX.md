@@ -29,7 +29,7 @@ Technical documentation about system design and implementation.
 Guides and references for active development.
 
 - **[Quick Reference](development/quick-reference.md)** - Developer quick start and common tasks
-- **[Deployment Guide](development/deployment-guide.md)** - Production deployment instructions (Replit, mobile apps)
+- **[Deployment Guide](development/deployment-guide.md)** - Production deployment instructions (Railway, mobile apps)
 - **[Design Guidelines](development/design-guidelines.md)** - UI/UX design principles and patterns
 - **[Refactoring Notes](development/refactoring-notes.md)** - Historical refactoring checkpoints and decisions
 

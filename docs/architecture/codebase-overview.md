@@ -121,11 +121,13 @@ JTBD-Mastery/
 ### Frontend (Mobile)
 - **React Native** 0.81.5 - Cross-platform mobile
 - **Expo** 54.0.20 - Managed React Native framework
-- **React Navigation** 6.1.18 - Mobile navigation
+- **Custom Navigation** - Lightweight bottom tab navigator (SimpleNavigator)
 - **React Native Paper** 5.14.5 - Material Design components
 - **AsyncStorage** 2.2.0 - Mobile persistent storage
 - **TanStack React Query** 5.90.5 - Data management
 - **Zod** 3.25.76 - Schema validation
+
+> **Note**: Uses custom `SimpleNavigator` instead of React Navigation for minimal bundle size. See CHANGELOG.md [2025-11-11] for migration considerations.
 
 ### Backend
 - **Node.js** - JavaScript runtime
@@ -559,7 +561,7 @@ DATABASE_URL=your_database_url_here
 **Important:**
 - Used by Express server (`/server/index.ts`)
 - Loaded via `dotenv` package
-- Must be replicated in Replit Secrets for deployment
+- Must be set in deployment platform's environment variables (e.g., Railway Variables)
 - Never commit to Git (in `.gitignore`)
 
 ### .env.example (Root directory)
@@ -572,7 +574,7 @@ Template showing required environment variables for new developers
   "expo": {
     "name": "JTBD Mastery",
     "extra": {
-      "apiBaseUrl": "https://jtbd-mastery-ceoworks.replit.app"
+      "apiBaseUrl": "https://your-production-api.railway.app"
     }
   }
 }
@@ -582,12 +584,6 @@ Template showing required environment variables for new developers
 - `extra.apiBaseUrl` - Backend API URL (production or local)
 - Read in code via `expo-constants`: `Constants.expoConfig?.extra?.apiBaseUrl`
 - Change this value to switch between local dev and production
-
-### .replit
-Deployment configuration for Replit hosting
-- Maps port 5001 to external port 80
-- Defines build and run commands
-- Sets up development workflow
 
 ---
 
@@ -676,10 +672,11 @@ Deployment configuration for Replit hosting
 - Dark mode via next-themes
 
 **Mobile:**
-- React Navigation (native)
+- Custom SimpleNavigator (lightweight bottom tabs)
 - React Native Paper
 - Native styling
 - Custom theme system
+- Optimized touch handling with `pointerEvents`
 
 **Both:**
 - Same business logic
@@ -730,7 +727,7 @@ npm start
 
 **Mobile App:**
 1. API URL is configured in `jtbd-mobile/app.json` under `extra.apiBaseUrl`
-2. For production: Use your deployed backend URL (e.g., Replit URL)
+2. For production: Use your deployed backend URL (e.g., Railway URL)
 3. For local dev: Use your local network IP (e.g., `http://192.168.x.x:5001`)
 4. The app reads this via `expo-constants` in `queryClient.ts`
 
@@ -796,11 +793,11 @@ if (typeof aiResponse === 'object') {
 ## 14. Deployment & Production Considerations
 
 ### Backend Deployment Options
-- **Replit** (Current deployment)
+- **Railway** (Current deployment)
 - Render
-- Railway
 - Vercel
 - AWS Lambda + API Gateway
+- Fly.io
 
 ### Backend Environment Variables (Server)
 
@@ -812,9 +809,9 @@ if (typeof aiResponse === 'object') {
 - `NODE_ENV` - development or production
 - `DATABASE_URL` - Database connection string (if using database)
 
-**On Replit:**
-- Set these in the "Secrets" tab (🔒 icon)
-- Replit injects them as environment variables at runtime
+**On Railway:**
+- Set these in the "Variables" tab in Railway dashboard
+- Railway injects them as environment variables at runtime
 - Never commit `.env` file to Git
 
 ### Mobile App Configuration
@@ -823,11 +820,11 @@ if (typeof aiResponse === 'object') {
 - Configured in `jtbd-mobile/app.json` under `extra.apiBaseUrl`
 - Read at runtime via `expo-constants` package
 
-**Production (Replit):**
+**Production (Railway):**
 ```json
 // jtbd-mobile/app.json
 "extra": {
-  "apiBaseUrl": "https://jtbd-mastery-ceoworks.replit.app"
+  "apiBaseUrl": "https://your-app.railway.app"
 }
 ```
 
@@ -847,8 +844,8 @@ if (typeof aiResponse === 'object') {
 
 ### HTTPS Configuration
 - **Local dev:** HTTP only (e.g., `http://192.168.x.x:5001`)
-- **Production:** HTTPS required (e.g., `https://your-app.replit.app`)
-- Replit automatically provides HTTPS for deployed apps
+- **Production:** HTTPS required (e.g., `https://your-app.railway.app`)
+- Railway automatically provides HTTPS for deployed apps
 
 ---
 
@@ -927,7 +924,6 @@ Based on REFACTORING_CHECKPOINTS.md:
 | `.env` | Server secrets | API keys, port (NOT in Git) |
 | `.env.example` | Config template | API key requirement documentation |
 | `jtbd-mobile/app.json` | Mobile config | Expo settings, apiBaseUrl for environment switching |
-| `.replit` | Replit deployment | Port mapping, build/run commands |
 
 ---
 

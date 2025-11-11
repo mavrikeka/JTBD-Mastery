@@ -84,14 +84,16 @@ export default function SimpleNavigator() {
         delayPressIn={0}
         hitSlop={{ top: 5, bottom: 5, left: 0, right: 0 }} // Extend touch area vertically, prevent horizontal overlap
       >
-        {/* Wrap children in View with pointerEvents="box-none" to ensure touches pass through */}
+        {/* Wrap children to prevent them from blocking touches - all touches pass to TouchableOpacity */}
         <View pointerEvents="box-none" style={styles.tabButtonContent}>
-          <Icon
-            size={24}
-            color={isActive ? theme.colors.primary : theme.colors.textMuted}
-            strokeWidth={isActive ? 2.5 : 2}
-          />
-          <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+          <View pointerEvents="none">
+            <Icon
+              size={24}
+              color={isActive ? theme.colors.primary : theme.colors.textMuted}
+              strokeWidth={isActive ? 2.5 : 2}
+            />
+          </View>
+          <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]} pointerEvents="none">
             {label}
           </Text>
         </View>

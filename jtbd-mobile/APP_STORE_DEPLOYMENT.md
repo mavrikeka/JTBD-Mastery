@@ -286,6 +286,13 @@ Then:
 3. Add external testers (up to 10,000, requires quick review)
 4. Share TestFlight link with testers
 
+**Important Testing Notes:**
+- **Test button responsiveness thoroughly** - Production builds (Hermes engine) behave differently than Expo Go (JSC engine)
+- **Test all touch positions** - Top, bottom, left, right, center of buttons
+- **Test with different touch pressures** - Soft taps and hard presses
+- **Test navigation** - All bottom tab buttons should respond consistently
+- See `docs/CHANGELOG.md` [2025-11-11] for fixes implemented in Build 5
+
 ### Android: Internal Testing
 
 1. Google Play Console → Testing → Internal testing

@@ -10,7 +10,7 @@ const app = express();
 app.use(cors({
   origin: '*', // Allow requests from any origin (mobile apps, web apps, etc.)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: false
 }));
 

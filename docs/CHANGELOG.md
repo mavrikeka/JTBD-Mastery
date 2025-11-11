@@ -33,9 +33,10 @@ All notable changes to the JTBD Mastery project.
   - Added: `delayLongPress={1000}` to TabButton TouchableOpacity
   - Added: `delayPressIn={0}` for immediate visual feedback
   - Added: `pointerEvents="box-none"` wrapper to prevent children from blocking touches
+  - Added: `pointerEvents="none"` to Icon and Text components to completely disable their touch interception
   - Added: `hitSlop` to extend vertical touch area without horizontal overlap
   - Fix: Hard presses no longer cancel navigation due to long-press gesture detection
-  - Fix: Entire tab button area now responds to touches (left, center, and right)
+  - Fix: Entire tab button area now responds to touches (top, bottom, left, center, right)
   - Impact: All touch pressures and positions now register correctly
 
 ### Technical Details
@@ -61,8 +62,13 @@ All notable changes to the JTBD Mastery project.
 **Touch Target Area Issue:**
 - Icon and Text children were intercepting touch events
 - Only center of button (where icon/text rendered) was responsive
-- Touches to left/right edges weren't reaching TouchableOpacity's onPress
-- Solution: Wrap children in View with `pointerEvents="box-none"` to let touches pass through
+- Touches to left/right/top edges weren't reaching TouchableOpacity's onPress
+- Icon component (lucide-react-native) has its own touch area that blocks parent
+- Solution:
+  - Wrap all children in View with `pointerEvents="box-none"` (wrapper ignores touches)
+  - Wrap Icon in View with `pointerEvents="none"` (Icon completely ignores touches)
+  - Add `pointerEvents="none"` to Text (Text completely ignores touches)
+  - All touches now pass through to parent TouchableOpacity
 - Added `hitSlop` to prevent horizontal overlap between adjacent tabs while extending vertical area
 
 ### Future Considerations
